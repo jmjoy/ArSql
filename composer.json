@@ -1,0 +1,18 @@
+{
+    "name": "jmjoy/ar-sql",
+    "description": "The PHP library implements ActiveRecord by returning raw SQL.",
+    "type": "library",
+    "require": {
+        "php": "5.3"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^6.1"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "jmjoy",
+            "email": "918734043@qq.com"
+        }
+    ]
+}
