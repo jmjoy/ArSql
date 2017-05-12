@@ -3,10 +3,10 @@
     "description": "The PHP library implements ActiveRecord by returning raw SQL.",
     "type": "library",
     "require": {
-        "php": "5.3"
+        "php": ">=5.3.3"
     },
     "require-dev": {
-        "phpunit/phpunit": "^6.1"
+        "phpunit/phpunit": "4.8.*"
     },
     "license": "MIT",
     "authors": [
@@ -14,5 +14,18 @@
             "name": "jmjoy",
             "email": "918734043@qq.com"
         }
-    ]
+    ],
+    "autoload": {
+        "psr-4": {
+            "arSql\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "test\\": "test/"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit test"
+    }
 }
