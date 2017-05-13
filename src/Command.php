@@ -3,6 +3,9 @@
 namespace arSql;
 
 use InvalidArgumentException;
+use arSql\Builder;
+use arSql\contract\ISqlHandler;
+use arSql\exception\NotSupportedException;
 
 class Command {
 
@@ -11,23 +14,41 @@ class Command {
      * This property is maintained by methods such as [[bindValue()]]. It is mainly provided for logging purpose
      * and is used to generate [[rawSql]]. Do not modify it directly.
      */
-    public $params = [];
+    public $params = array();
 
     /**
      * @var array pending parameters to be bound to the current PDO statement.
      */
-    private $_pendingParams = [];
+    private $_pendingParams = array();
 
     /**
      * @var string the SQL statement that this command represents
      */
     private $_sql;
 
-
     protected $sqlHandler;
+
+    protected $schema;
+
+    protected $builder;
 
     public function __construct(ISqlHandler $sqlHandler) {
         $this->sqlHandler = $sqlHandler;
+        $schemaType = $this->sqlHandler->schemaType();
+        $schemaClass = "\\arSql\\{$schemaType}\\Schema";
+        if (!class_exists($schemaClass)) {
+            throw new NotSupportedException("Not supported schema type: {$schemaType}");
+        }
+        $this->schema = new $schemaClass();
+        $this->builder = new Builder($this->schema);
+    }
+
+    public function getSchema() {
+        return $this->schema;
+    }
+
+    public function getBuilder() {
+        return $this->builder;
     }
 
     /**
@@ -48,8 +69,8 @@ class Command {
         if ($sql !== $this->_sql) {
             // $this->_sql = $this->db->quoteSql($sql);
             $this->_sql = $sql;
-            $this->_pendingParams = [];
-            $this->params = [];
+            $this->_pendingParams = array();
+            $this->params = array();
         }
 
         return $this;
@@ -65,7 +86,7 @@ class Command {
         if (empty($this->params)) {
             return $this->_sql;
         }
-        $params = [];
+        $params = array();
         foreach ($this->params as $name => $value) {
             if (is_string($name) && strncmp(':', $name, 1)) {
                 $name = ':' . $name;
@@ -139,7 +160,7 @@ class Command {
         if ($dataType === null) {
             $dataType = $this->db->getSchema()->getPdoType($value);
         }
-        $this->_pendingParams[$name] = [$value, $dataType];
+        $this->_pendingParams[$name] = array($value, $dataType);
         $this->params[$name] = $value;
 
         return $this;
@@ -169,7 +190,7 @@ class Command {
                 $this->params[$name] = $value[0];
             } else {
                 $type = $schema->getPdoType($value);
-                $this->_pendingParams[$name] = [$value, $type];
+                $this->_pendingParams[$name] = array($value, $type);
                 $this->params[$name] = $value;
             }
         }
@@ -178,7 +199,7 @@ class Command {
     }
 
     public function insert($table, $columns) {
-        $params = [];
+        $params = array();
         $sql = $this->db->getQueryBuilder()->insert($table, $columns, $params);
 
         return $this->setSql($sql)->bindValues($params);
