@@ -144,6 +144,9 @@ class BuilderTest extends TestCase {
     }
 
     public function testDelete() {
+        $sql = $this->builder->delete('user', 'status = 0', $params);
+        $this->assertEquals($sql, 'DELETE FROM `user` WHERE status = 0');
+        $this->assertEmpty($params);
     }
 
 }

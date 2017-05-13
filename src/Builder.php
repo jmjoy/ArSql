@@ -269,6 +269,30 @@ class Builder {
     }
 
     /**
+     * Creates a DELETE SQL statement.
+     * For example,
+     *
+     * ```php
+     * $sql = $queryBuilder->delete('user', 'status = 0');
+     * ```
+     *
+     * The method will properly escape the table and column names.
+     *
+     * @param string $table the table where the data will be deleted from.
+     * @param array|string $condition the condition that will be put in the WHERE part. Please
+     * refer to [[Query::where()]] on how to specify condition.
+     * @param array $params the binding parameters that will be modified by this method
+     * so that they can be bound to the DB command later.
+     * @return string the DELETE SQL
+     */
+    public function delete($table, $condition, &$params) {
+        $sql = 'DELETE FROM ' . $this->schema->quoteTableName($table);
+        $where = $this->buildWhere($condition, $params);
+
+        return $where === '' ? $sql : $sql . ' ' . $where;
+    }
+
+    /**
      * @param string|array $condition
      * @param array $params the binding parameters to be populated
      * @return string the WHERE clause built from [[Query::$where]].
