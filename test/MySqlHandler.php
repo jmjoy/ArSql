@@ -2,10 +2,19 @@
 
 namespace test;
 
+use PDO;
 use arSql\contract\ISqlHandler;
 use arSql\exception\NotSupportedException;
 
 class MySqlHandler implements ISqlHandler {
+
+    protected $pdo;
+
+    public function __construct() {
+        $config = require __DIR__ . '/data/config.php';
+        $mysqlConfig = $config['database']['mysql'];
+        $this->pdo = new PDO($mysqlConfig['dsn'], $mysqlConfig['username'], $mysqlConfig['password']);
+    }
 
     public function schemaType() {
         return ISqlHandler::SCHEMA_MYSQL;

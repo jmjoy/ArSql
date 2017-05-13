@@ -27,6 +27,7 @@
         }
     },
     "scripts": {
-        "test": "vendor/bin/phpunit test"
+        "test": "vendor/bin/phpunit test",
+        "docker-test": "docker-compose run php composer run test"
     }
 }

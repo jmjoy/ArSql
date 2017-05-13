@@ -304,6 +304,291 @@ class Builder {
     }
 
     /**
+     * @param array $columns
+     * @param array $params the binding parameters to be populated
+     * @param bool $distinct
+     * @param string $selectOption
+     * @return string the SELECT clause built from [[Query::$select]].
+     */
+    public function buildSelect($columns, &$params, $distinct = false, $selectOption = null) {
+        $select = $distinct ? 'SELECT DISTINCT' : 'SELECT';
+        if ($selectOption !== null) {
+            $select .= ' ' . $selectOption;
+        }
+
+        if (empty($columns)) {
+            return $select . ' *';
+        }
+
+        foreach ($columns as $i => $column) {
+            if ($column instanceof Expression) {
+                if (is_int($i)) {
+                    $columns[$i] = $column->expression;
+                } else {
+                    $columns[$i] = $column->expression . ' AS ' . $this->db->quoteColumnName($i);
+                }
+                $params = array_merge($params, $column->params);
+            } elseif ($column instanceof Query) {
+                list($sql, $params) = $this->build($column, $params);
+                $columns[$i] = "($sql) AS " . $this->db->quoteColumnName($i);
+            } elseif (is_string($i)) {
+                if (strpos($column, '(') === false) {
+                    $column = $this->db->quoteColumnName($column);
+                }
+                $columns[$i] = "$column AS " . $this->db->quoteColumnName($i);
+            } elseif (strpos($column, '(') === false) {
+                if (preg_match('/^(.*?)(?i:\s+as\s+|\s+)([\w\-_\.]+)$/', $column, $matches)) {
+                    $columns[$i] = $this->db->quoteColumnName($matches[1]) . ' AS ' . $this->db->quoteColumnName($matches[2]);
+                } else {
+                    $columns[$i] = $this->db->quoteColumnName($column);
+                }
+            }
+        }
+
+        return $select . ' ' . implode(', ', $columns);
+    }
+
+    /**
+     * @param array $tables
+     * @param array $params the binding parameters to be populated
+     * @return string the FROM clause built from [[Query::$from]].
+     */
+    public function buildFrom($tables, &$params)
+    {
+        if (empty($tables)) {
+            return '';
+        }
+
+        $tables = $this->quoteTableNames($tables, $params);
+
+        return 'FROM ' . implode(', ', $tables);
+    }
+
+    /**
+     * @param array $joins
+     * @param array $params the binding parameters to be populated
+     * @return string the JOIN clause built from [[Query::$join]].
+     * @throws Exception if the $joins parameter is not in proper format
+     */
+    public function buildJoin($joins, &$params)
+    {
+        if (empty($joins)) {
+            return '';
+        }
+
+        foreach ($joins as $i => $join) {
+            if (!is_array($join) || !isset($join[0], $join[1])) {
+                throw new Exception('A join clause must be specified as an array of join type, join table, and optionally join condition.');
+            }
+            // 0:join type, 1:join table, 2:on-condition (optional)
+            list ($joinType, $table) = $join;
+            $tables = $this->quoteTableNames((array) $table, $params);
+            $table = reset($tables);
+            $joins[$i] = "$joinType $table";
+            if (isset($join[2])) {
+                $condition = $this->buildCondition($join[2], $params);
+                if ($condition !== '') {
+                    $joins[$i] .= ' ON ' . $condition;
+                }
+            }
+        }
+
+        return implode($this->separator, $joins);
+    }
+
+    /**
+     * Quotes table names passed
+     *
+     * @param array $tables
+     * @param array $params
+     * @return array
+     */
+    private function quoteTableNames($tables, &$params)
+    {
+        foreach ($tables as $i => $table) {
+            if ($table instanceof Query) {
+                list($sql, $params) = $this->build($table, $params);
+                $tables[$i] = "($sql) " . $this->db->quoteTableName($i);
+            } elseif (is_string($i)) {
+                if (strpos($table, '(') === false) {
+                    $table = $this->db->quoteTableName($table);
+                }
+                $tables[$i] = "$table " . $this->db->quoteTableName($i);
+            } elseif (strpos($table, '(') === false) {
+                if (preg_match('/^(.*?)(?i:\s+as|)\s+([^ ]+)$/', $table, $matches)) { // with alias
+                    $tables[$i] = $this->db->quoteTableName($matches[1]) . ' ' . $this->db->quoteTableName($matches[2]);
+                } else {
+                    $tables[$i] = $this->db->quoteTableName($table);
+                }
+            }
+        }
+        return $tables;
+    }
+
+    /**
+     * @param array $columns
+     * @return string the GROUP BY clause
+     */
+    public function buildGroupBy($columns)
+    {
+        if (empty($columns)) {
+            return '';
+        }
+        foreach ($columns as $i => $column) {
+            if ($column instanceof Expression) {
+                $columns[$i] = $column->expression;
+            } elseif (strpos($column, '(') === false) {
+                $columns[$i] = $this->db->quoteColumnName($column);
+            }
+        }
+        return 'GROUP BY ' . implode(', ', $columns);
+    }
+
+    /**
+     * @param string|array $condition
+     * @param array $params the binding parameters to be populated
+     * @return string the HAVING clause built from [[Query::$having]].
+     */
+    public function buildHaving($condition, &$params)
+    {
+        $having = $this->buildCondition($condition, $params);
+
+        return $having === '' ? '' : 'HAVING ' . $having;
+    }
+
+    /**
+     * Builds the ORDER BY and LIMIT/OFFSET clauses and appends them to the given SQL.
+     * @param string $sql the existing SQL (without ORDER BY/LIMIT/OFFSET)
+     * @param array $orderBy the order by columns. See [[Query::orderBy]] for more details on how to specify this parameter.
+     * @param int $limit the limit number. See [[Query::limit]] for more details.
+     * @param int $offset the offset number. See [[Query::offset]] for more details.
+     * @return string the SQL completed with ORDER BY/LIMIT/OFFSET (if any)
+     */
+    public function buildOrderByAndLimit($sql, $orderBy, $limit, $offset)
+    {
+        $orderBy = $this->buildOrderBy($orderBy);
+        if ($orderBy !== '') {
+            $sql .= $this->separator . $orderBy;
+        }
+        $limit = $this->buildLimit($limit, $offset);
+        if ($limit !== '') {
+            $sql .= $this->separator . $limit;
+        }
+        return $sql;
+    }
+
+    /**
+     * @param array $columns
+     * @return string the ORDER BY clause built from [[Query::$orderBy]].
+     */
+    public function buildOrderBy($columns)
+    {
+        if (empty($columns)) {
+            return '';
+        }
+        $orders = array();
+        foreach ($columns as $name => $direction) {
+            if ($direction instanceof Expression) {
+                $orders[] = $direction->expression;
+            } else {
+                $orders[] = $this->db->quoteColumnName($name) . ($direction === SORT_DESC ? ' DESC' : '');
+            }
+        }
+
+        return 'ORDER BY ' . implode(', ', $orders);
+    }
+
+    /**
+     * @param int $limit
+     * @param int $offset
+     * @return string the LIMIT and OFFSET clauses
+     */
+    public function buildLimit($limit, $offset)
+    {
+        $sql = '';
+        if ($this->hasLimit($limit)) {
+            $sql = 'LIMIT ' . $limit;
+        }
+        if ($this->hasOffset($offset)) {
+            $sql .= ' OFFSET ' . $offset;
+        }
+
+        return ltrim($sql);
+    }
+
+    /**
+     * Checks to see if the given limit is effective.
+     * @param mixed $limit the given limit
+     * @return bool whether the limit is effective
+     */
+    protected function hasLimit($limit)
+    {
+        return ctype_digit((string) $limit);
+    }
+
+    /**
+     * Checks to see if the given offset is effective.
+     * @param mixed $offset the given offset
+     * @return bool whether the offset is effective
+     */
+    protected function hasOffset($offset)
+    {
+        $offset = (string) $offset;
+        return ctype_digit($offset) && $offset !== '0';
+    }
+
+    /**
+     * @param array $unions
+     * @param array $params the binding parameters to be populated
+     * @return string the UNION clause built from [[Query::$union]].
+     */
+    public function buildUnion($unions, &$params)
+    {
+        if (empty($unions)) {
+            return '';
+        }
+
+        $result = '';
+
+        foreach ($unions as $i => $union) {
+            $query = $union['query'];
+            if ($query instanceof Query) {
+                list($unions[$i]['query'], $params) = $this->build($query, $params);
+            }
+
+            $result .= 'UNION ' . ($union['all'] ? 'ALL ' : '') . '( ' . $unions[$i]['query'] . ' ) ';
+        }
+
+        return trim($result);
+    }
+
+    /**
+     * Processes columns and properly quotes them if necessary.
+     * It will join all columns into a string with comma as separators.
+     * @param string|array $columns the columns to be processed
+     * @return string the processing result
+     */
+    public function buildColumns($columns)
+    {
+        if (!is_array($columns)) {
+            if (strpos($columns, '(') !== false) {
+                return $columns;
+            } else {
+                $columns = preg_split('/\s*,\s*/', $columns, -1, PREG_SPLIT_NO_EMPTY);
+            }
+        }
+        foreach ($columns as $i => $column) {
+            if ($column instanceof Expression) {
+                $columns[$i] = $column->expression;
+            } elseif (strpos($column, '(') === false) {
+                $columns[$i] = $this->db->quoteColumnName($column);
+            }
+        }
+
+        return is_array($columns) ? implode(', ', $columns) : $columns;
+    }
+
+    /**
      * Parses the condition specification and generates the corresponding SQL expression.
      * @param string|array|Expression $condition the condition specification. Please refer to [[Query::where()]]
      * on how to specify a condition.

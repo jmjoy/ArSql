@@ -8,6 +8,7 @@ class CommandTest extends TestCase {
 
     public function testA() {
         // $command = new Command(array());
+        $this->assertTrue(true);
     }
 
 }

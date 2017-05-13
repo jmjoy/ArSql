@@ -11,9 +11,8 @@ class BuilderTest extends TestCase {
 
     protected $builder;
 
-    protected function setUp() {
-        $command = new Command(new MySqlHandler());
-        $this->builder = $command->getBuilder();
+    public function setUp() {
+        $this->builder = static::$command->getBuilder();
     }
 
     public function conditionProvider() {

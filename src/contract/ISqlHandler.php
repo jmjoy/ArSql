@@ -16,8 +16,14 @@ interface ISqlHandler {
 
     public function queryScalar($sql);
 
+    /**
+     * 执行一条 SQL 语句，并返回受影响的行数
+     */
     public function execute($sql);
 
+    /**
+     * 返回最后插入行的ID或序列值
+     */
     public function getLastInsertID();
 
 }

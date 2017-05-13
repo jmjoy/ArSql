@@ -92,7 +92,7 @@ class Command {
                 $name = ':' . $name;
             }
             if (is_string($value)) {
-                $params[$name] = $this->db->quoteValue($value);
+                $params[$name] = $this->schema->quoteValue($value);
             } elseif (is_bool($value)) {
                 $params[$name] = ($value ? 'TRUE' : 'FALSE');
             } elseif ($value === null) {
@@ -177,19 +177,19 @@ class Command {
      * e.g. `[':name' => 'John', ':profile' => [$profile, \PDO::PARAM_LOB]]`.
      * @return $this the current command being executed
      */
-    public function bindValues($values)
-    {
+    public function bindValues($values) {
         if (empty($values)) {
             return $this;
         }
 
-        $schema = $this->db->getSchema();
+        $schema = $this->schema;
         foreach ($values as $name => $value) {
             if (is_array($value)) {
                 $this->_pendingParams[$name] = $value;
                 $this->params[$name] = $value[0];
             } else {
-                $type = $schema->getPdoType($value);
+                // $type = $schema->getPdoType($value);
+                $type = ''; // TODO Want to delete _pendingParams;
                 $this->_pendingParams[$name] = array($value, $type);
                 $this->params[$name] = $value;
             }
@@ -200,7 +200,7 @@ class Command {
 
     public function insert($table, $columns) {
         $params = array();
-        $sql = $this->db->getQueryBuilder()->insert($table, $columns, $params);
+        $sql = $this->builder->insert($table, $columns, $params);
 
         return $this->setSql($sql)->bindValues($params);
     }
