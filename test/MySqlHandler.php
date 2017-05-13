@@ -10,10 +10,8 @@ class MySqlHandler implements ISqlHandler {
 
     protected $pdo;
 
-    public function __construct() {
-        $config = require __DIR__ . '/data/config.php';
-        $mysqlConfig = $config['database']['mysql'];
-        $this->pdo = new PDO($mysqlConfig['dsn'], $mysqlConfig['username'], $mysqlConfig['password']);
+    public function __construct($pdo) {
+        $this->pdo = $pdo;
     }
 
     public function schemaType() {
@@ -21,7 +19,7 @@ class MySqlHandler implements ISqlHandler {
     }
 
     public function queryAll($sql) {
-        throw new NotSupportedException();
+        return $this->pdo->query($sql)->fetchAll(PDO::FETCH_COLUMN);
     }
 
     public function queryOne($sql) {
@@ -37,7 +35,7 @@ class MySqlHandler implements ISqlHandler {
     }
 
     public function execute($sql) {
-        throw new NotSupportedException();
+        return $this->pdo->exec($sql);
     }
 
     public function getLastInsertID() {
