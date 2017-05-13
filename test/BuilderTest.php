@@ -138,6 +138,9 @@ class BuilderTest extends TestCase {
     }
 
     public function testUpdate() {
+        $sql = $this->builder->update('user', array('status' => 1), 'age > 30', $params);
+        $this->assertEquals($sql, 'UPDATE `user` SET `status`=:qp0 WHERE age > 30');
+        $this->assertEquals($params, array(':qp0' => 1));
     }
 
     public function testDelete() {
