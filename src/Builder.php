@@ -102,6 +102,19 @@ class Builder {
         return array($sql, $params);
     }
 
+    /**
+     * Creates an INSERT SQL statement.
+     * For example,
+     *
+     * ```php
+     * $sql = $queryBuilder->insert('user', [
+     *     'name' => 'Sam',
+     *     'age' => 30,
+     * ], $params);
+     * ```
+     *
+     * The method will properly escape the table and column names.
+     */
     public function insert($table, $columns, &$params) {
         $schema = $this->schema;
         $columnSchemas = array();
@@ -154,6 +167,62 @@ class Builder {
         }
 
         return array($names, $values);
+    }
+
+    /**
+     * Generates a batch INSERT SQL statement.
+     * For example,
+     *
+     * ```php
+     * $sql = $queryBuilder->batchInsert('user', ['name', 'age'], [
+     *     ['Tom', 30],
+     *     ['Jane', 20],
+     *     ['Linda', 25],
+     * ]);
+     * ```
+     *
+     * Note that the values in each row must match the corresponding column names.
+     *
+     * The method will properly escape the column names, and quote the values to be inserted.
+     *
+     * @param string $table the table that new rows will be inserted into.
+     * @param array $columns the column names
+     * @param array $rows the rows to be batch inserted into the table
+     * @return string the batch INSERT SQL statement
+     */
+    public function batchInsert($table, $columns, $rows) {
+        if (empty($rows)) {
+            return '';
+        }
+
+        $schema = $this->schema;
+        $columnSchemas = array();
+
+        $values = array();
+        foreach ($rows as $row) {
+            $vs = array();
+            foreach ($row as $i => $value) {
+                if (isset($columns[$i], $columnSchemas[$columns[$i]]) && !is_array($value)) {
+                    $value = $columnSchemas[$columns[$i]]->dbTypecast($value);
+                }
+                if (is_string($value)) {
+                    $value = $schema->quoteValue($value);
+                } elseif ($value === false) {
+                    $value = 0;
+                } elseif ($value === null) {
+                    $value = 'NULL';
+                }
+                $vs[] = $value;
+            }
+            $values[] = '(' . implode(', ', $vs) . ')';
+        }
+
+        foreach ($columns as $i => $name) {
+            $columns[$i] = $schema->quoteColumnName($name);
+        }
+
+        return 'INSERT INTO ' . $schema->quoteTableName($table)
+        . ' (' . implode(', ', $columns) . ') VALUES ' . implode(', ', $values);
     }
 
 }

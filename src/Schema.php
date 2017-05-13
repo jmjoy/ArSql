@@ -350,18 +350,13 @@ abstract class Schema
      * @return string the properly quoted string
      * @see http://www.php.net/manual/en/function.PDO-quote.php
      */
-    public function quoteValue($str)
-    {
+    public function quoteValue($str) {
         if (!is_string($str)) {
             return $str;
         }
 
-        if (($value = $this->db->getSlavePdo()->quote($str)) !== false) {
-            return $value;
-        } else {
-            // the driver doesn't support quote (e.g. oci)
-            return "'" . addcslashes(str_replace("'", "''", $str), "\000\n\r\\\032") . "'";
-        }
+        // the driver doesn't support quote (e.g. oci)
+        return "'" . addcslashes(str_replace("'", "''", $str), "\000\n\r\\\032") . "'";
     }
 
     /**
