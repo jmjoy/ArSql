@@ -230,7 +230,7 @@ class Builder {
      * For example,
      *
      * ```php
-     * $params = [];
+     * $params = array();
      * $sql = $queryBuilder->update('user', ['status' => 1], 'age > 30', $params);
      * ```
      *
@@ -325,22 +325,22 @@ class Builder {
                 if (is_int($i)) {
                     $columns[$i] = $column->expression;
                 } else {
-                    $columns[$i] = $column->expression . ' AS ' . $this->db->quoteColumnName($i);
+                    $columns[$i] = $column->expression . ' AS ' . $this->schema->quoteColumnName($i);
                 }
                 $params = array_merge($params, $column->params);
             } elseif ($column instanceof Query) {
                 list($sql, $params) = $this->build($column, $params);
-                $columns[$i] = "($sql) AS " . $this->db->quoteColumnName($i);
+                $columns[$i] = "($sql) AS " . $this->schema->quoteColumnName($i);
             } elseif (is_string($i)) {
                 if (strpos($column, '(') === false) {
-                    $column = $this->db->quoteColumnName($column);
+                    $column = $this->schema->quoteColumnName($column);
                 }
-                $columns[$i] = "$column AS " . $this->db->quoteColumnName($i);
+                $columns[$i] = "$column AS " . $this->schema->quoteColumnName($i);
             } elseif (strpos($column, '(') === false) {
                 if (preg_match('/^(.*?)(?i:\s+as\s+|\s+)([\w\-_\.]+)$/', $column, $matches)) {
-                    $columns[$i] = $this->db->quoteColumnName($matches[1]) . ' AS ' . $this->db->quoteColumnName($matches[2]);
+                    $columns[$i] = $this->schema->quoteColumnName($matches[1]) . ' AS ' . $this->schema->quoteColumnName($matches[2]);
                 } else {
-                    $columns[$i] = $this->db->quoteColumnName($column);
+                    $columns[$i] = $this->schema->quoteColumnName($column);
                 }
             }
         }
@@ -408,17 +408,17 @@ class Builder {
         foreach ($tables as $i => $table) {
             if ($table instanceof Query) {
                 list($sql, $params) = $this->build($table, $params);
-                $tables[$i] = "($sql) " . $this->db->quoteTableName($i);
+                $tables[$i] = "($sql) " . $this->schema->quoteTableName($i);
             } elseif (is_string($i)) {
                 if (strpos($table, '(') === false) {
-                    $table = $this->db->quoteTableName($table);
+                    $table = $this->schema->quoteTableName($table);
                 }
-                $tables[$i] = "$table " . $this->db->quoteTableName($i);
+                $tables[$i] = "$table " . $this->schema->quoteTableName($i);
             } elseif (strpos($table, '(') === false) {
                 if (preg_match('/^(.*?)(?i:\s+as|)\s+([^ ]+)$/', $table, $matches)) { // with alias
-                    $tables[$i] = $this->db->quoteTableName($matches[1]) . ' ' . $this->db->quoteTableName($matches[2]);
+                    $tables[$i] = $this->schema->quoteTableName($matches[1]) . ' ' . $this->schema->quoteTableName($matches[2]);
                 } else {
-                    $tables[$i] = $this->db->quoteTableName($table);
+                    $tables[$i] = $this->schema->quoteTableName($table);
                 }
             }
         }
@@ -438,7 +438,7 @@ class Builder {
             if ($column instanceof Expression) {
                 $columns[$i] = $column->expression;
             } elseif (strpos($column, '(') === false) {
-                $columns[$i] = $this->db->quoteColumnName($column);
+                $columns[$i] = $this->schema->quoteColumnName($column);
             }
         }
         return 'GROUP BY ' . implode(', ', $columns);
@@ -491,7 +491,7 @@ class Builder {
             if ($direction instanceof Expression) {
                 $orders[] = $direction->expression;
             } else {
-                $orders[] = $this->db->quoteColumnName($name) . ($direction === SORT_DESC ? ' DESC' : '');
+                $orders[] = $this->schema->quoteColumnName($name) . ($direction === SORT_DESC ? ' DESC' : '');
             }
         }
 
@@ -523,7 +523,7 @@ class Builder {
      */
     protected function hasLimit($limit)
     {
-        return ctype_digit((string) $limit);
+        return ($limit instanceof Expression) || ctype_digit((string) $limit);
     }
 
     /**
@@ -533,8 +533,7 @@ class Builder {
      */
     protected function hasOffset($offset)
     {
-        $offset = (string) $offset;
-        return ctype_digit($offset) && $offset !== '0';
+        return ($offset instanceof Expression) || ctype_digit((string) $offset) && (string) $offset !== '0';
     }
 
     /**
@@ -581,7 +580,7 @@ class Builder {
             if ($column instanceof Expression) {
                 $columns[$i] = $column->expression;
             } elseif (strpos($column, '(') === false) {
-                $columns[$i] = $this->db->quoteColumnName($column);
+                $columns[$i] = $this->schema->quoteColumnName($column);
             }
         }
 

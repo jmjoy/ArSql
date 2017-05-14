@@ -15,7 +15,7 @@ class CommandTest extends TestCase {
         $id = static::$command->insert('user', $user)->execute();
         $this->assertEquals($id, 1);
 
-        $result = static::$mysqlHandler->queryOne("select * from user where name = 'JJ' limit 1");
+        $result = static::$sqlHandler->queryOne("select * from user where name = 'JJ' limit 1");
         $this->assertEquals($user['email'], $result['email']);
     }
 
@@ -29,7 +29,7 @@ class CommandTest extends TestCase {
 
         $this->assertEquals($rowCount, 1);
 
-        $result = static::$mysqlHandler->queryOne("select * from user where name = 'JJ' limit 1");
+        $result = static::$sqlHandler->queryOne("select * from user where name = 'JJ' limit 1");
         $this->assertEquals($result['address'], 'AAABBBCCC');
     }
 
@@ -43,7 +43,7 @@ class CommandTest extends TestCase {
 
         $this->assertEquals($rowCount, 1);
 
-        $result = static::$mysqlHandler->queryAll("select * from user where name = 'JJ' limit 1");
+        $result = static::$sqlHandler->queryAll("select * from user where name = 'JJ' limit 1");
         $this->assertEmpty($result);
     }
 
@@ -58,7 +58,7 @@ class CommandTest extends TestCase {
 
         $this->assertEquals($rowCount, 3);
 
-        $count = static::$mysqlHandler->queryScalar("select count(*) from user where email = '123@xxx.com'");
+        $count = static::$sqlHandler->queryScalar("select count(*) from user where email = '123@xxx.com'");
         $this->assertEquals($count, 3);
     }
 

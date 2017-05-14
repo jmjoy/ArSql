@@ -5,6 +5,7 @@ namespace test;
 use PDO;
 use PHPUnit_Framework_TestCase;
 use arSql\Command;
+use arSql\ArSql;
 
 abstract class TestCase extends PHPUnit_Framework_TestCase {
 
@@ -14,7 +15,7 @@ abstract class TestCase extends PHPUnit_Framework_TestCase {
 
     protected static $command;
 
-    protected static $mysqlHandler;
+    protected static $sqlHandler;
 
     public static function setUpBeforeClass() {
         if (!static::$initialized) {
@@ -26,8 +27,10 @@ abstract class TestCase extends PHPUnit_Framework_TestCase {
 
             static::prepareDatabase($mysqlConfig['fixture']);
 
-            static::$mysqlHandler = new MySqlHandler(static::$pdo);
-            static::$command = new Command(static::$mysqlHandler);
+            static::$sqlHandler = new MySqlHandler(static::$pdo);
+            static::$command = new Command(static::$sqlHandler);
+
+            ArSql::registerSqlHandler(static::$sqlHandler);
         }
     }
 

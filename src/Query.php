@@ -95,7 +95,7 @@ class Query {
      * @var array list of query parameter values indexed by parameter placeholders.
      * For example, `[':name' => 'Dan', ':age' => 31]`.
      */
-    public $params = [];
+    public $params = array();
 
     /**
      * @var string|array query condition. This refers to the WHERE clause in a SQL statement.
@@ -135,25 +135,16 @@ class Query {
     public $emulateExecution = false;
 
 
-    protected $sqlHandler;
-
-    public function __construct(ISqlHandler $sqlHandler) {
-        $this->sqlHandler = $sqlHandler;
-    }
-
     /**
      * Creates a DB command that can be used to execute this query.
-     * @param Connection $db the database connection used to generate the SQL statement.
-     * If this parameter is not given, the `db` application component will be used.
-     * @return Command the created DB command instance.
      */
-    public function createCommand($db = null) {
-        if ($db === null) {
-            $db = Yii::$app->getDb();
+    public function createCommand(ISqlHandler $sqlHandler = null) {
+        if ($sqlHandler === null) {
+            $sqlHandler = ArSql::getSqlHandler();
         }
-        list ($sql, $params) = $db->getQueryBuilder()->build($this);
-
-        return $db->createCommand($sql, $params);
+        $command = new Command($sqlHandler);
+        list($sql, $params) = $command->getBuilder()->build($this);
+        return $command->setSql($sql)->bindValues($params);
     }
 
     /**
@@ -191,13 +182,13 @@ class Query {
      */
     public function batch($batchSize = 100, $db = null)
     {
-        return Yii::createObject([
-            'class' => BatchQueryResult::className(),
-            'query' => $this,
-            'batchSize' => $batchSize,
-            'db' => $db,
-            'each' => false,
-        ]);
+        // return Yii::createObject([
+        //     'class' => BatchQueryResult::className(),
+        //     'query' => $this,
+        //     'batchSize' => $batchSize,
+        //     'db' => $db,
+        //     'each' => false,
+        // ]);
     }
 
     /**
@@ -218,13 +209,13 @@ class Query {
      */
     public function each($batchSize = 100, $db = null)
     {
-        return Yii::createObject([
-            'class' => BatchQueryResult::className(),
-            'query' => $this,
-            'batchSize' => $batchSize,
-            'db' => $db,
-            'each' => true,
-        ]);
+        // return Yii::createObject([
+        //     'class' => BatchQueryResult::className(),
+        //     'query' => $this,
+        //     'batchSize' => $batchSize,
+        //     'db' => $db,
+        //     'each' => true,
+        // ]);
     }
 
     /**
@@ -233,12 +224,11 @@ class Query {
      * If this parameter is not given, the `db` application component will be used.
      * @return array the query results. If the query results in nothing, an empty array will be returned.
      */
-    public function all($db = null)
-    {
+    public function all(ISqlHandler $sqlHandler = null) {
         if ($this->emulateExecution) {
-            return [];
+            return array();
         }
-        $rows = $this->createCommand($db)->queryAll();
+        $rows = $this->createCommand($sqlHandler)->queryAll();
         return $this->populate($rows);
     }
 
@@ -249,12 +239,11 @@ class Query {
      * @param array $rows the raw query result from database
      * @return array the converted query result
      */
-    public function populate($rows)
-    {
+    public function populate($rows) {
         if ($this->indexBy === null) {
             return $rows;
         }
-        $result = [];
+        $result = array();
         foreach ($rows as $row) {
             if (is_string($this->indexBy)) {
                 $key = $row[$this->indexBy];
@@ -268,17 +257,14 @@ class Query {
 
     /**
      * Executes the query and returns a single row of result.
-     * @param Connection $db the database connection used to generate the SQL statement.
-     * If this parameter is not given, the `db` application component will be used.
      * @return array|bool the first row (in terms of an array) of the query result. False is returned if the query
      * results in nothing.
      */
-    public function one($db = null)
-    {
+    public function one(ISqlHandler $sqlHandler = null) {
         if ($this->emulateExecution) {
             return false;
         }
-        return $this->createCommand($db)->queryOne();
+        return $this->createCommand($sqlHandler)->queryOne();
     }
 
     /**
@@ -289,35 +275,32 @@ class Query {
      * @return string|null|false the value of the first column in the first row of the query result.
      * False is returned if the query result is empty.
      */
-    public function scalar($db = null)
-    {
+    public function scalar(ISqlHandler $sqlHandler = null) {
         if ($this->emulateExecution) {
             return null;
         }
-        return $this->createCommand($db)->queryScalar();
+        return $this->createCommand($sqlHandler)->queryScalar();
     }
 
     /**
      * Executes the query and returns the first column of the result.
-     * @param Connection $db the database connection used to generate the SQL statement.
      * If this parameter is not given, the `db` application component will be used.
      * @return array the first column of the query result. An empty array is returned if the query results in nothing.
      */
-    public function column($db = null)
-    {
+    public function column(ISqlHandler $sqlHandler = null) {
         if ($this->emulateExecution) {
-            return [];
+            return array();
         }
 
         if ($this->indexBy === null) {
-            return $this->createCommand($db)->queryColumn();
+            return $this->createCommand($sqlHandler)->queryColumn();
         }
 
         if (is_string($this->indexBy) && is_array($this->select) && count($this->select) === 1) {
             $this->select[] = $this->indexBy;
         }
-        $rows = $this->createCommand($db)->queryAll();
-        $results = [];
+        $rows = $this->createCommand($sqlHandler)->queryAll();
+        $results = array();
         foreach ($rows as $row) {
             $value = reset($row);
 
@@ -339,12 +322,11 @@ class Query {
      * @return int|string number of records. The result may be a string depending on the
      * underlying database engine and to support integer values higher than a 32bit PHP integer can handle.
      */
-    public function count($q = '*', $db = null)
-    {
+    public function count($q = '*', ISqlHandler $sqlHandler = null) {
         if ($this->emulateExecution) {
             return 0;
         }
-        return $this->queryScalar("COUNT($q)", $db);
+        return $this->queryScalar("COUNT($q)", $sqlHandler);
     }
 
     /**
@@ -355,12 +337,11 @@ class Query {
      * If this parameter is not given, the `db` application component will be used.
      * @return mixed the sum of the specified column values.
      */
-    public function sum($q, $db = null)
-    {
+    public function sum($q, ISqlHandler $sqlHandler = null) {
         if ($this->emulateExecution) {
             return 0;
         }
-        return $this->queryScalar("SUM($q)", $db);
+        return $this->queryScalar("SUM($q)", $sqlHandler);
     }
 
     /**
@@ -371,12 +352,11 @@ class Query {
      * If this parameter is not given, the `db` application component will be used.
      * @return mixed the average of the specified column values.
      */
-    public function average($q, $db = null)
-    {
+    public function average($q, ISqlHandler $sqlHandler = null) {
         if ($this->emulateExecution) {
             return 0;
         }
-        return $this->queryScalar("AVG($q)", $db);
+        return $this->queryScalar("AVG($q)", $sqlHandler);
     }
 
     /**
@@ -387,9 +367,8 @@ class Query {
      * If this parameter is not given, the `db` application component will be used.
      * @return mixed the minimum of the specified column values.
      */
-    public function min($q, $db = null)
-    {
-        return $this->queryScalar("MIN($q)", $db);
+    public function min($q, ISqlHandler $sqlHandler = null) {
+        return $this->queryScalar("MIN($q)", $sqlHandler);
     }
 
     /**
@@ -400,9 +379,8 @@ class Query {
      * If this parameter is not given, the `db` application component will be used.
      * @return mixed the maximum of the specified column values.
      */
-    public function max($q, $db = null)
-    {
-        return $this->queryScalar("MAX($q)", $db);
+    public function max($q, ISqlHandler $sqlHandler = null) {
+        return $this->queryScalar("MAX($q)", $sqlHandler);
     }
 
     /**
@@ -411,14 +389,13 @@ class Query {
      * If this parameter is not given, the `db` application component will be used.
      * @return bool whether the query result contains any row of data.
      */
-    public function exists($db = null)
-    {
+    public function exists(ISqlHandler $sqlHandler = null) {
         if ($this->emulateExecution) {
             return false;
         }
-        $command = $this->createCommand($db);
+        $command = $this->createCommand($sqlHandler);
         $params = $command->params;
-        $command->setSql($command->db->getQueryBuilder()->selectExists($command->getSql()));
+        $command->setSql($command->getBuilder()->selectExists($command->getSql()));
         $command->bindValues($params);
         return (bool) $command->queryScalar();
     }
@@ -430,8 +407,7 @@ class Query {
      * @param Connection|null $db
      * @return bool|string
      */
-    protected function queryScalar($selectExpression, $db)
-    {
+    protected function queryScalar($selectExpression, ISqlHandler $sqlHandler = null) {
         if ($this->emulateExecution) {
             return null;
         }
@@ -440,10 +416,10 @@ class Query {
         $limit = $this->limit;
         $offset = $this->offset;
 
-        $this->select = [$selectExpression];
+        $this->select = array($selectExpression);
         $this->limit = null;
         $this->offset = null;
-        $command = $this->createCommand($db);
+        $command = $this->createCommand($sqlHandler);
 
         $this->select = $select;
         $this->limit = $limit;
@@ -458,9 +434,10 @@ class Query {
         ) {
             return $command->queryScalar();
         } else {
-            return (new Query)->select([$selectExpression])
-                ->from(['c' => $this])
-                ->createCommand($command->db)
+            $query = new static();
+            return $query->select(array($selectExpression))
+                ->from(array('c' => $this))
+                ->createCommand($sqlHandler)
                 ->queryScalar();
         }
     }
@@ -487,10 +464,9 @@ class Query {
      * in MySQL, the option 'SQL_CALC_FOUND_ROWS' can be used.
      * @return $this the query object itself
      */
-    public function select($columns, $option = null)
-    {
+    public function select($columns, $option = null) {
         if ($columns instanceof Expression) {
-            $columns = [$columns];
+            $columns = array($columns);
         } elseif (!is_array($columns)) {
             $columns = preg_split('/\s*,\s*/', trim($columns), -1, PREG_SPLIT_NO_EMPTY);
         }
@@ -514,10 +490,9 @@ class Query {
      * @return $this the query object itself
      * @see select()
      */
-    public function addSelect($columns)
-    {
+    public function addSelect($columns) {
         if ($columns instanceof Expression) {
-            $columns = [$columns];
+            $columns = array($columns);
         } elseif (!is_array($columns)) {
             $columns = preg_split('/\s*,\s*/', trim($columns), -1, PREG_SPLIT_NO_EMPTY);
         }
@@ -598,8 +573,7 @@ class Query {
      * @see orWhere()
      * @see QueryInterface::where()
      */
-    public function where($condition, $params = [])
-    {
+    public function where($condition, $params = array()) {
         $this->where = $condition;
         $this->addParams($params);
         return $this;
@@ -615,14 +589,13 @@ class Query {
      * @see where()
      * @see orWhere()
      */
-    public function andWhere($condition, $params = [])
-    {
+    public function andWhere($condition, $params = array()) {
         if ($this->where === null) {
             $this->where = $condition;
         } elseif (is_array($this->where) && isset($this->where[0]) && strcasecmp($this->where[0], 'and') === 0) {
             $this->where[] = $condition;
         } else {
-            $this->where = ['and', $this->where, $condition];
+            $this->where = array('and', $this->where, $condition);
         }
         $this->addParams($params);
         return $this;
@@ -638,12 +611,11 @@ class Query {
      * @see where()
      * @see andWhere()
      */
-    public function orWhere($condition, $params = [])
-    {
+    public function orWhere($condition, $params = array()) {
         if ($this->where === null) {
             $this->where = $condition;
         } else {
-            $this->where = ['or', $this->where, $condition];
+            $this->where = array('or', $this->where, $condition);
         }
         $this->addParams($params);
         return $this;
@@ -675,15 +647,14 @@ class Query {
      * @return $this The query object itself
      * @since 2.0.8
      */
-    public function andFilterCompare($name, $value, $defaultOperator = '=')
-    {
+    public function andFilterCompare($name, $value, $defaultOperator = '=') {
         if (preg_match('/^(<>|>=|>|<=|<|=)/', $value, $matches)) {
             $operator = $matches[1];
             $value = substr($value, strlen($operator));
         } else {
             $operator = $defaultOperator;
         }
-        return $this->andFilterWhere([$operator, $name, $value]);
+        return $this->andFilterWhere(array($operator, $name, $value));
     }
 
     /**
@@ -716,9 +687,8 @@ class Query {
      * @param array $params the parameters (name => value) to be bound to the query.
      * @return $this the query object itself
      */
-    public function join($type, $table, $on = '', $params = [])
-    {
-        $this->join[] = [$type, $table, $on];
+    public function join($type, $table, $on = '', $params = array()) {
+        $this->join[] = array($type, $table, $on);
         return $this->addParams($params);
     }
 
@@ -740,9 +710,8 @@ class Query {
      * @param array $params the parameters (name => value) to be bound to the query.
      * @return $this the query object itself
      */
-    public function innerJoin($table, $on = '', $params = [])
-    {
-        $this->join[] = ['INNER JOIN', $table, $on];
+    public function innerJoin($table, $on = '', $params = array()) {
+        $this->join[] = array('INNER JOIN', $table, $on);
         return $this->addParams($params);
     }
 
@@ -764,9 +733,8 @@ class Query {
      * @param array $params the parameters (name => value) to be bound to the query
      * @return $this the query object itself
      */
-    public function leftJoin($table, $on = '', $params = [])
-    {
-        $this->join[] = ['LEFT JOIN', $table, $on];
+    public function leftJoin($table, $on = '', $params = array()) {
+        $this->join[] = array('LEFT JOIN', $table, $on);
         return $this->addParams($params);
     }
 
@@ -788,9 +756,8 @@ class Query {
      * @param array $params the parameters (name => value) to be bound to the query
      * @return $this the query object itself
      */
-    public function rightJoin($table, $on = '', $params = [])
-    {
-        $this->join[] = ['RIGHT JOIN', $table, $on];
+    public function rightJoin($table, $on = '', $params = array()) {
+        $this->join[] = array('RIGHT JOIN', $table, $on);
         return $this->addParams($params);
     }
 
@@ -809,10 +776,9 @@ class Query {
      * @return $this the query object itself
      * @see addGroupBy()
      */
-    public function groupBy($columns)
-    {
+    public function groupBy($columns) {
         if ($columns instanceof Expression) {
-            $columns = [$columns];
+            $columns = array($columns);
         } elseif (!is_array($columns)) {
             $columns = preg_split('/\s*,\s*/', trim($columns), -1, PREG_SPLIT_NO_EMPTY);
         }
@@ -835,10 +801,9 @@ class Query {
      * @return $this the query object itself
      * @see groupBy()
      */
-    public function addGroupBy($columns)
-    {
+    public function addGroupBy($columns) {
         if ($columns instanceof Expression) {
-            $columns = [$columns];
+            $columns = array($columns);
         } elseif (!is_array($columns)) {
             $columns = preg_split('/\s*,\s*/', trim($columns), -1, PREG_SPLIT_NO_EMPTY);
         }
@@ -859,8 +824,7 @@ class Query {
      * @see andHaving()
      * @see orHaving()
      */
-    public function having($condition, $params = [])
-    {
+    public function having($condition, $params = array()) {
         $this->having = $condition;
         $this->addParams($params);
         return $this;
@@ -876,12 +840,11 @@ class Query {
      * @see having()
      * @see orHaving()
      */
-    public function andHaving($condition, $params = [])
-    {
+    public function andHaving($condition, $params = array()) {
         if ($this->having === null) {
             $this->having = $condition;
         } else {
-            $this->having = ['and', $this->having, $condition];
+            $this->having = array('and', $this->having, $condition);
         }
         $this->addParams($params);
         return $this;
@@ -897,12 +860,11 @@ class Query {
      * @see having()
      * @see andHaving()
      */
-    public function orHaving($condition, $params = [])
-    {
+    public function orHaving($condition, $params = array()) {
         if ($this->having === null) {
             $this->having = $condition;
         } else {
-            $this->having = ['or', $this->having, $condition];
+            $this->having = array('or', $this->having, $condition);
         }
         $this->addParams($params);
         return $this;
@@ -936,10 +898,9 @@ class Query {
      * @see orFilterHaving()
      * @since 2.0.11
      */
-    public function filterHaving(array $condition)
-    {
+    public function filterHaving(array $condition) {
         $condition = $this->filterCondition($condition);
-        if ($condition !== []) {
+        if ($condition !== array()) {
             $this->having($condition);
         }
         return $this;
@@ -960,10 +921,9 @@ class Query {
      * @see orFilterHaving()
      * @since 2.0.11
      */
-    public function andFilterHaving(array $condition)
-    {
+    public function andFilterHaving(array $condition) {
         $condition = $this->filterCondition($condition);
-        if ($condition !== []) {
+        if ($condition !== array()) {
             $this->andHaving($condition);
         }
         return $this;
@@ -984,10 +944,9 @@ class Query {
      * @see andFilterHaving()
      * @since 2.0.11
      */
-    public function orFilterHaving(array $condition)
-    {
+    public function orFilterHaving(array $condition) {
         $condition = $this->filterCondition($condition);
-        if ($condition !== []) {
+        if ($condition !== array()) {
             $this->orHaving($condition);
         }
         return $this;
@@ -999,9 +958,8 @@ class Query {
      * @param bool $all TRUE if using UNION ALL and FALSE if using UNION
      * @return $this the query object itself
      */
-    public function union($sql, $all = false)
-    {
-        $this->union[] = ['query' => $sql, 'all' => $all];
+    public function union($sql, $all = false) {
+        $this->union[] = array('query' => $sql, 'all' => $all);
         return $this;
     }
 
@@ -1012,8 +970,7 @@ class Query {
      * @return $this the query object itself
      * @see addParams()
      */
-    public function params($params)
-    {
+    public function params($params) {
         $this->params = $params;
         return $this;
     }
@@ -1025,8 +982,7 @@ class Query {
      * @return $this the query object itself
      * @see params()
      */
-    public function addParams($params)
-    {
+    public function addParams($params) {
         if (!empty($params)) {
             if (empty($this->params)) {
                 $this->params = $params;
@@ -1049,9 +1005,8 @@ class Query {
      * @param Query $from the source query object
      * @return Query the new Query object
      */
-    public static function create($from)
-    {
-        return new self([
+    public static function create($from) {
+        return new self(array(
             'where' => $from->where,
             'limit' => $from->limit,
             'offset' => $from->offset,
@@ -1066,7 +1021,7 @@ class Query {
             'having' => $from->having,
             'union' => $from->union,
             'params' => $from->params,
-        ]);
+        ));
     }
 
     /**
@@ -1087,60 +1042,6 @@ class Query {
     public function indexBy($column)
     {
         $this->indexBy = $column;
-        return $this;
-    }
-
-    /**
-     * Sets the WHERE part of the query.
-     *
-     * See [[QueryInterface::where()]] for detailed documentation.
-     *
-     * @param string|array $condition the conditions that should be put in the WHERE part.
-     * @return $this the query object itself
-     * @see andWhere()
-     * @see orWhere()
-     */
-    public function where($condition)
-    {
-        $this->where = $condition;
-        return $this;
-    }
-
-    /**
-     * Adds an additional WHERE condition to the existing one.
-     * The new condition and the existing one will be joined using the 'AND' operator.
-     * @param string|array $condition the new WHERE condition. Please refer to [[where()]]
-     * on how to specify this parameter.
-     * @return $this the query object itself
-     * @see where()
-     * @see orWhere()
-     */
-    public function andWhere($condition)
-    {
-        if ($this->where === null) {
-            $this->where = $condition;
-        } else {
-            $this->where = ['and', $this->where, $condition];
-        }
-        return $this;
-    }
-
-    /**
-     * Adds an additional WHERE condition to the existing one.
-     * The new condition and the existing one will be joined using the 'OR' operator.
-     * @param string|array $condition the new WHERE condition. Please refer to [[where()]]
-     * on how to specify this parameter.
-     * @return $this the query object itself
-     * @see where()
-     * @see andWhere()
-     */
-    public function orWhere($condition)
-    {
-        if ($this->where === null) {
-            $this->where = $condition;
-        } else {
-            $this->where = ['or', $this->where, $condition];
-        }
         return $this;
     }
 
@@ -1171,10 +1072,9 @@ class Query {
      * @see andFilterWhere()
      * @see orFilterWhere()
      */
-    public function filterWhere(array $condition)
-    {
+    public function filterWhere(array $condition) {
         $condition = $this->filterCondition($condition);
-        if ($condition !== []) {
+        if ($condition !== array()) {
             $this->where($condition);
         }
         return $this;
@@ -1194,10 +1094,9 @@ class Query {
      * @see filterWhere()
      * @see orFilterWhere()
      */
-    public function andFilterWhere(array $condition)
-    {
+    public function andFilterWhere(array $condition) {
         $condition = $this->filterCondition($condition);
-        if ($condition !== []) {
+        if ($condition !== array()) {
             $this->andWhere($condition);
         }
         return $this;
@@ -1217,10 +1116,9 @@ class Query {
      * @see filterWhere()
      * @see andFilterWhere()
      */
-    public function orFilterWhere(array $condition)
-    {
+    public function orFilterWhere(array $condition) {
         $condition = $this->filterCondition($condition);
-        if ($condition !== []) {
+        if ($condition !== array()) {
             $this->orWhere($condition);
         }
         return $this;
@@ -1233,8 +1131,7 @@ class Query {
      * @return array the condition with [[isEmpty()|empty operands]] removed.
      * @throws NotSupportedException if the condition operator is not supported
      */
-    protected function filterCondition($condition)
-    {
+    protected function filterCondition($condition) {
         if (!is_array($condition)) {
             return $condition;
         }
@@ -1267,20 +1164,20 @@ class Query {
                 }
 
                 if (empty($condition)) {
-                    return [];
+                    return array();
                 }
                 break;
             case 'BETWEEN':
             case 'NOT BETWEEN':
                 if (array_key_exists(1, $condition) && array_key_exists(2, $condition)) {
                     if ($this->isEmpty($condition[1]) || $this->isEmpty($condition[2])) {
-                        return [];
+                        return array();
                     }
                 }
                 break;
             default:
                 if (array_key_exists(1, $condition) && $this->isEmpty($condition[1])) {
-                    return [];
+                    return array();
                 }
         }
 
@@ -1302,9 +1199,8 @@ class Query {
      * @param mixed $value
      * @return bool if the value is empty
      */
-    protected function isEmpty($value)
-    {
-        return $value === '' || $value === [] || $value === null || is_string($value) && trim($value) === '';
+    protected function isEmpty($value) {
+        return $value === '' || $value === array() || $value === null || is_string($value) && trim($value) === '';
     }
 
     /**
@@ -1324,8 +1220,7 @@ class Query {
      * @return $this the query object itself
      * @see addOrderBy()
      */
-    public function orderBy($columns)
-    {
+    public function orderBy($columns) {
         $this->orderBy = $this->normalizeOrderBy($columns);
         return $this;
     }
@@ -1347,8 +1242,7 @@ class Query {
      * @return $this the query object itself
      * @see orderBy()
      */
-    public function addOrderBy($columns)
-    {
+    public function addOrderBy($columns) {
         $columns = $this->normalizeOrderBy($columns);
         if ($this->orderBy === null) {
             $this->orderBy = $columns;
@@ -1364,15 +1258,14 @@ class Query {
      * @param array|string|Expression $columns the columns value to normalize. See [[orderBy]] and [[addOrderBy]].
      * @return array
      */
-    protected function normalizeOrderBy($columns)
-    {
+    protected function normalizeOrderBy($columns) {
         if ($columns instanceof Expression) {
-            return [$columns];
+            return array($columns);
         } elseif (is_array($columns)) {
             return $columns;
         } else {
             $columns = preg_split('/\s*,\s*/', trim($columns), -1, PREG_SPLIT_NO_EMPTY);
-            $result = [];
+            $result = array();
             foreach ($columns as $column) {
                 if (preg_match('/^(.*?)\s+(asc|desc)$/i', $column, $matches)) {
                     $result[$matches[1]] = strcasecmp($matches[2], 'desc') ? SORT_ASC : SORT_DESC;
@@ -1389,8 +1282,7 @@ class Query {
      * @param int $limit the limit. Use null or negative value to disable limit.
      * @return $this the query object itself
      */
-    public function limit($limit)
-    {
+    public function limit($limit) {
         $this->limit = $limit;
         return $this;
     }
@@ -1400,8 +1292,7 @@ class Query {
      * @param int $offset the offset. Use null or negative value to disable offset.
      * @return $this the query object itself
      */
-    public function offset($offset)
-    {
+    public function offset($offset) {
         $this->offset = $offset;
         return $this;
     }
@@ -1416,9 +1307,9 @@ class Query {
      * @return $this the query object itself.
      * @since 2.0.11
      */
-    public function emulateExecution($value = true)
-    {
+    public function emulateExecution($value = true) {
         $this->emulateExecution = $value;
         return $this;
     }
+
 }
