@@ -19,11 +19,11 @@ class MySqlHandler implements ISqlHandler {
     }
 
     public function queryAll($sql) {
-        return $this->pdo->query($sql)->fetchAll(PDO::FETCH_COLUMN);
+        return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function queryOne($sql) {
-        throw new NotSupportedException();
+        return $this->pdo->query($sql)->fetch(PDO::FETCH_ASSOC);
     }
 
     public function queryColumn($sql) {
@@ -31,7 +31,7 @@ class MySqlHandler implements ISqlHandler {
     }
 
     public function queryScalar($sql) {
-        throw new NotSupportedException();
+        return $this->pdo->query($sql)->fetchColumn();
     }
 
     public function execute($sql) {
@@ -39,7 +39,7 @@ class MySqlHandler implements ISqlHandler {
     }
 
     public function getLastInsertID() {
-        throw new NotSupportedException();
+        return $this->pdo->lastInsertId();
     }
 
 }

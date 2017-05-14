@@ -32,7 +32,7 @@ class Command {
 
     protected $builder;
 
-    public function __construct(ISqlHandler $sqlHandler) {
+    public function __construct(ISqlHandler $sqlHandler, $sql = '', $params = array()) {
         $this->sqlHandler = $sqlHandler;
         $schemaType = $this->sqlHandler->schemaType();
         $schemaClass = "\\arSql\\{$schemaType}\\Schema";
@@ -41,6 +41,10 @@ class Command {
         }
         $this->schema = new $schemaClass();
         $this->builder = new Builder($this->schema);
+
+        if ($sql) {
+            $this->setSql($sql)->bindValues($params);
+        }
     }
 
     public function getSchema() {
@@ -113,54 +117,17 @@ class Command {
     }
 
     /**
-     * Binds a parameter to the SQL statement to be executed.
-     * @param string|int $name parameter identifier. For a prepared statement
-     * using named placeholders, this will be a parameter name of
-     * the form `:name`. For a prepared statement using question mark
-     * placeholders, this will be the 1-indexed position of the parameter.
-     * @param mixed $value the PHP variable to bind to the SQL statement parameter (passed by reference)
-     * @param int $dataType SQL data type of the parameter. If null, the type is determined by the PHP type of the value.
-     * @param int $length length of the data type
-     * @param mixed $driverOptions the driver-specific options
-     * @return $this the current command being executed
-     * @see http://www.php.net/manual/en/function.PDOStatement-bindParam.php
-     */
-    public function bindParam($name, &$value, $dataType = null, $length = null, $driverOptions = null)
-    {
-        $this->prepare();
-
-        if ($dataType === null) {
-            $dataType = $this->db->getSchema()->getPdoType($value);
-        }
-        if ($length === null) {
-            $this->pdoStatement->bindParam($name, $value, $dataType);
-        } elseif ($driverOptions === null) {
-            $this->pdoStatement->bindParam($name, $value, $dataType, $length);
-        } else {
-            $this->pdoStatement->bindParam($name, $value, $dataType, $length, $driverOptions);
-        }
-        $this->params[$name] =& $value;
-
-        return $this;
-    }
-
-    /**
      * Binds a value to a parameter.
      * @param string|int $name Parameter identifier. For a prepared statement
      * using named placeholders, this will be a parameter name of
      * the form `:name`. For a prepared statement using question mark
      * placeholders, this will be the 1-indexed position of the parameter.
      * @param mixed $value The value to bind to the parameter
-     * @param int $dataType SQL data type of the parameter. If null, the type is determined by the PHP type of the value.
      * @return $this the current command being executed
      * @see http://www.php.net/manual/en/function.PDOStatement-bindValue.php
      */
-    public function bindValue($name, $value, $dataType = null)
-    {
-        if ($dataType === null) {
-            $dataType = $this->db->getSchema()->getPdoType($value);
-        }
-        $this->_pendingParams[$name] = array($value, $dataType);
+    public function bindValue($name, $value) {
+        // $this->_pendingParams[$name] = array($value, $dataType);
         $this->params[$name] = $value;
 
         return $this;
@@ -198,9 +165,108 @@ class Command {
         return $this;
     }
 
+    /**
+     * Creates an INSERT command.
+     * For example,
+     *
+     * ```php
+     * $connection->createCommand()->insert('user', [
+     *     'name' => 'Sam',
+     *     'age' => 30,
+     * ])->execute();
+     * ```
+     *
+     * The method will properly escape the column names, and bind the values to be inserted.
+     *
+     * Note that the created command is not executed until [[execute()]] is called.
+     *
+     * @param string $table the table that new rows will be inserted into.
+     * @param array|\yii\db\Query $columns the column data (name => value) to be inserted into the table or instance
+     * of [[yii\db\Query|Query]] to perform INSERT INTO ... SELECT SQL statement.
+     * Passing of [[yii\db\Query|Query]] is available since version 2.0.11.
+     * @return $this the command object itself
+     */
     public function insert($table, $columns) {
         $params = array();
         $sql = $this->builder->insert($table, $columns, $params);
+
+        return $this->setSql($sql)->bindValues($params);
+    }
+
+    /**
+     * Creates a batch INSERT command.
+     * For example,
+     *
+     * ```php
+     * $connection->createCommand()->batchInsert('user', ['name', 'age'], [
+     *     ['Tom', 30],
+     *     ['Jane', 20],
+     *     ['Linda', 25],
+     * ])->execute();
+     * ```
+     *
+     * The method will properly escape the column names, and quote the values to be inserted.
+     *
+     * Note that the values in each row must match the corresponding column names.
+     *
+     * Also note that the created command is not executed until [[execute()]] is called.
+     *
+     * @param string $table the table that new rows will be inserted into.
+     * @param array $columns the column names
+     * @param array $rows the rows to be batch inserted into the table
+     * @return $this the command object itself
+     */
+    public function batchInsert($table, $columns, $rows) {
+        $sql = $this->builder->batchInsert($table, $columns, $rows);
+
+        return $this->setSql($sql);
+    }
+
+    /**
+     * Creates an UPDATE command.
+     * For example,
+     *
+     * ```php
+     * $connection->createCommand()->update('user', ['status' => 1], 'age > 30')->execute();
+     * ```
+     *
+     * The method will properly escape the column names and bind the values to be updated.
+     *
+     * Note that the created command is not executed until [[execute()]] is called.
+     *
+     * @param string $table the table to be updated.
+     * @param array $columns the column data (name => value) to be updated.
+     * @param string|array $condition the condition that will be put in the WHERE part. Please
+     * refer to [[Query::where()]] on how to specify condition.
+     * @param array $params the parameters to be bound to the command
+     * @return $this the command object itself
+     */
+    public function update($table, $columns, $condition = '', $params = array()) {
+        $sql = $this->builder->update($table, $columns, $condition, $params);
+
+        return $this->setSql($sql)->bindValues($params);
+    }
+
+    /**
+     * Creates a DELETE command.
+     * For example,
+     *
+     * ```php
+     * $connection->createCommand()->delete('user', 'status = 0')->execute();
+     * ```
+     *
+     * The method will properly escape the table and column names.
+     *
+     * Note that the created command is not executed until [[execute()]] is called.
+     *
+     * @param string $table the table where the data will be deleted from.
+     * @param string|array $condition the condition that will be put in the WHERE part. Please
+     * refer to [[Query::where()]] on how to specify condition.
+     * @param array $params the parameters to be bound to the command
+     * @return $this the command object itself
+     */
+    public function delete($table, $condition = '', $params = array()) {
+        $sql = $this->builder->delete($table, $condition, $params);
 
         return $this->setSql($sql)->bindValues($params);
     }
@@ -210,22 +276,22 @@ class Command {
         return $this->sqlHandler->queryAll($rawSql);
     }
 
-    public function queryOne($sql) {
+    public function queryOne() {
         $rawSql = $this->getRawSql();
         return $this->sqlHandler->queryOne($rawSql);
     }
 
-    public function queryColumn($sql) {
+    public function queryColumn() {
         $rawSql = $this->getRawSql();
         return $this->sqlHandler->queryColumn($rawSql);
     }
 
-    public function queryScalar($sql) {
+    public function queryScalar() {
         $rawSql = $this->getRawSql();
         return $this->sqlHandler->queryScalar($rawSql);
     }
 
-    public function execute($sql) {
+    public function execute() {
         $rawSql = $this->getRawSql();
         return $this->sqlHandler->execute($rawSql);
     }

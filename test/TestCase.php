@@ -14,6 +14,8 @@ abstract class TestCase extends PHPUnit_Framework_TestCase {
 
     protected static $command;
 
+    protected static $mysqlHandler;
+
     public static function setUpBeforeClass() {
         if (!static::$initialized) {
             static::$initialized = true;
@@ -24,7 +26,8 @@ abstract class TestCase extends PHPUnit_Framework_TestCase {
 
             static::prepareDatabase($mysqlConfig['fixture']);
 
-            static::$command = new Command(new MySqlHandler(static::$pdo));
+            static::$mysqlHandler = new MySqlHandler(static::$pdo);
+            static::$command = new Command(static::$mysqlHandler);
         }
     }
 
