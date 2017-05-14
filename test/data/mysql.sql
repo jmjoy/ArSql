@@ -1,5 +1,3 @@
-CREATE DATABASE IF NOT EXISTS `test` DEFAULT CHARSET utf8mb4;
-
 DROP TABLE IF EXISTS `user`;
 
 CREATE TABLE `user` (
@@ -8,5 +6,5 @@ CREATE TABLE `user` (
 `email` varchar(128) NOT NULL,
 `address` text,
 `status` int (11) DEFAULT 0,
-PRIMARY KEY (`id`),
+PRIMARY KEY (`id`)
 );

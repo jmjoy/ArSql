@@ -28,6 +28,6 @@
     },
     "scripts": {
         "test": "vendor/bin/phpunit test",
-        "docker-test": "docker-compose run php composer run test"
+        "docker-test": "docker-compose exec php composer run test"
     }
 }

@@ -46,9 +46,9 @@ abstract class TestCase extends PHPUnit_Framework_TestCase {
             $line = trim($line);
             if ($line !== '') {
                 if (static::$pdo->exec($line) === false) {
+                    dump($line);
                     dump(static::$pdo->errorInfo());
-                    // TODO
-                    die(print_r(static::$pdo->errorInfo(), true));
+                    die();
                 }
             }
         }
