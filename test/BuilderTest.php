@@ -2,10 +2,12 @@
 
 namespace test;
 
+use ArrayObject;
 use arSql\Command;
 use arSql\exception\NotSupportedException;
 use test\MySqlHandler;
 use arSql\Expression;
+use arSql\Query;
 
 class BuilderTest extends TestCase {
 
@@ -47,11 +49,11 @@ class BuilderTest extends TestCase {
             // in
             array( array('in', 'id', array(1, 2, 3)), '[[id]] IN (:qp0, :qp1, :qp2)', array(':qp0' => 1, ':qp1' => 2, ':qp2' => 3) ),
             array( array('not in', 'id', array(1, 2, 3)), '[[id]] NOT IN (:qp0, :qp1, :qp2)', array(':qp0' => 1, ':qp1' => 2, ':qp2' => 3) ),
-            // [ ['in', 'id', (new Query())->select('id')->from('users')->where(['active' => 1])], '[[id]] IN (SELECT [[id]] FROM [[users]] WHERE [[active]]=:qp0)', [':qp0' => 1] ],
-            // [ ['not in', 'id', (new Query())->select('id')->from('users')->where(['active' => 1])], '[[id]] NOT IN (SELECT [[id]] FROM [[users]] WHERE [[active]]=:qp0)', [':qp0' => 1] ],
+            array( array('in', 'id', Query::newInstance()->select('id')->from('users')->where(array('active' => 1))), '[[id]] IN (SELECT [[id]] FROM [[users]] WHERE [[active]]=:qp0)', array(':qp0' => 1) ),
+            array( array('not in', 'id', Query::newInstance()->select('id')->from('users')->where(array('active' => 1))), '[[id]] NOT IN (SELECT [[id]] FROM [[users]] WHERE [[active]]=:qp0)', array(':qp0' => 1) ),
             array( array('in', 'id', 1),   '[[id]]=:qp0', array(':qp0' => 1) ),
             array( array('in', 'id', array(1)), '[[id]]=:qp0', array(':qp0' => 1) ),
-            // [ ['in', 'id', new TraversableObject([1])], '[[id]]=:qp0', [':qp0' => 1] ],
+            array( array('in', 'id', new ArrayObject(array(1))), '[[id]]=:qp0', array(':qp0' => 1) ),
             'composite in' => array(
                 array('in', array('id', 'name'), array(array('id' =>1, 'name' => 'oy'))),
                 '([[id]], [[name]]) IN ((:qp0, :qp1))',
@@ -59,20 +61,20 @@ class BuilderTest extends TestCase {
             ),
 
             // // in using array objects.
-            // [ ['id' => new TraversableObject([1, 2])], '[[id]] IN (:qp0, :qp1)', [':qp0' => 1, ':qp1' => 2] ],
-            // [ ['in', 'id', new TraversableObject([1, 2, 3])], '[[id]] IN (:qp0, :qp1, :qp2)', [':qp0' => 1, ':qp1' => 2, ':qp2' => 3] ],
-            // 'composite in using array objects' => [
-            //     ['in', new TraversableObject(['id', 'name']), new TraversableObject([
-            //         ['id' => 1, 'name' => 'oy'],
-            //         ['id' => 2, 'name' => 'yo'],
-            //     ])],
-            //     '([[id]], [[name]]) IN ((:qp0, :qp1), (:qp2, :qp3))',
-            //     [':qp0' => 1, ':qp1' => 'oy', ':qp2' => 2, ':qp3' => 'yo']
-            // ],
+            array( array('id' => new ArrayObject(array(1, 2))), '[[id]] IN (:qp0, :qp1)', array(':qp0' => 1, ':qp1' => 2) ),
+            array( array('in', 'id', new ArrayObject(array(1, 2, 3))), '[[id]] IN (:qp0, :qp1, :qp2)', array(':qp0' => 1, ':qp1' => 2, ':qp2' => 3) ),
+            'composite in using array objects' => array(
+                array('in', new ArrayObject(array('id', 'name')), new ArrayObject(array(
+                    array('id' => 1, 'name' => 'oy'),
+                    array('id' => 2, 'name' => 'yo'),
+                ))),
+                '([[id]], [[name]]) IN ((:qp0, :qp1), (:qp2, :qp3))',
+                array(':qp0' => 1, ':qp1' => 'oy', ':qp2' => 2, ':qp3' => 'yo'),
+            ),
 
-            // // exists
-            // [ ['exists', (new Query())->select('id')->from('users')->where(['active' => 1])], 'EXISTS (SELECT [[id]] FROM [[users]] WHERE [[active]]=:qp0)', [':qp0' => 1] ],
-            // [ ['not exists', (new Query())->select('id')->from('users')->where(['active' => 1])], 'NOT EXISTS (SELECT [[id]] FROM [[users]] WHERE [[active]]=:qp0)', [':qp0' => 1] ],
+            // exists
+            array( array('exists', Query::newInstance()->select('id')->from('users')->where(array('active' => 1))), 'EXISTS (SELECT [[id]] FROM [[users]] WHERE [[active]]=:qp0)', array(':qp0' => 1) ),
+            array( array('not exists', Query::newInstance()->select('id')->from('users')->where(array('active' => 1))), 'NOT EXISTS (SELECT [[id]] FROM [[users]] WHERE [[active]]=:qp0)', array(':qp0' => 1) ),
 
             // simple conditions
             array( array('=', 'a', 'b'), '[[a]] = :qp0', array(':qp0' => 'b') ),

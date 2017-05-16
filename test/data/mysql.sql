@@ -47,8 +47,8 @@ INSERT INTO `category` (name) VALUES ('Books');
 INSERT INTO `category` (name) VALUES ('Movies');
 
 
-INSERT INTO `item` (name, category_id) VALUES ('Agile Web Application Development with Yii1.1 and PHP5', 1);
-INSERT INTO `item` (name, category_id) VALUES ('Yii 1.1 Application Development Cookbook', 1);
+INSERT INTO `item` (name, category_id) VALUES ('Agile Web Application Development with ArSql1.1 and PHP5', 1);
+INSERT INTO `item` (name, category_id) VALUES ('ArSql 1.1 Application Development Cookbook', 1);
 INSERT INTO `item` (name, category_id) VALUES ('Ice Age', 2);
 INSERT INTO `item` (name, category_id) VALUES ('Toy Story', 2);
 INSERT INTO `item` (name, category_id) VALUES ('Cars', 2);

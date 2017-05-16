@@ -32,7 +32,10 @@ class Command {
 
     protected $builder;
 
-    public function __construct(ISqlHandler $sqlHandler, $sql = '', $params = array()) {
+    public function __construct(ISqlHandler $sqlHandler = null, $sql = '', $params = array()) {
+        if ($sqlHandler === null) {
+            $sqlHandler = ArSql::getSqlHandler();
+        }
         $this->sqlHandler = $sqlHandler;
         $schemaType = $this->sqlHandler->schemaType();
         $schemaClass = "\\arSql\\{$schemaType}\\Schema";

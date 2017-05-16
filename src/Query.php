@@ -134,14 +134,18 @@ class Query {
      */
     public $emulateExecution = false;
 
+    /**
+     * A new method for PHP5.3
+     * @return Query
+     */
+    public static function newInstance() {
+        return new static();
+    }
 
     /**
      * Creates a DB command that can be used to execute this query.
      */
     public function createCommand(ISqlHandler $sqlHandler = null) {
-        if ($sqlHandler === null) {
-            $sqlHandler = ArSql::getSqlHandler();
-        }
         $command = new Command($sqlHandler);
         list($sql, $params) = $command->getBuilder()->build($this);
         return $command->setSql($sql)->bindValues($params);
@@ -182,7 +186,7 @@ class Query {
      */
     public function batch($batchSize = 100, $db = null)
     {
-        // return Yii::createObject([
+        // return ArSql::createObject([
         //     'class' => BatchQueryResult::className(),
         //     'query' => $this,
         //     'batchSize' => $batchSize,
@@ -209,7 +213,7 @@ class Query {
      */
     public function each($batchSize = 100, $db = null)
     {
-        // return Yii::createObject([
+        // return ArSql::createObject([
         //     'class' => BatchQueryResult::className(),
         //     'query' => $this,
         //     'batchSize' => $batchSize,

@@ -24,4 +24,8 @@ class ArSql {
         return new Command(static::getSqlHandler(), $sql, $params);
     }
 
+    public static function t($category, $message, $params = array(), $language = null) {
+        return $message;
+    }
+
 }

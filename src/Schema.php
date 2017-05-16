@@ -67,7 +67,7 @@ abstract class Schema
      */
     protected function createColumnSchema()
     {
-        return Yii::createObject($this->columnSchemaClass);
+        return ArSql::createObject($this->columnSchemaClass);
     }
 
     /**
@@ -154,7 +154,7 @@ abstract class Schema
     public function refresh()
     {
         /* @var $cache Cache */
-        $cache = is_string($this->db->schemaCache) ? Yii::$app->get($this->db->schemaCache, false) : $this->db->schemaCache;
+        $cache = is_string($this->db->schemaCache) ? ArSql::$app->get($this->db->schemaCache, false) : $this->db->schemaCache;
         if ($this->db->enableSchemaCache && $cache instanceof Cache) {
             TagDependency::invalidate($cache, $this->getCacheTag());
         }
@@ -174,7 +174,7 @@ abstract class Schema
         unset($this->_tables[$name]);
         $this->_tableNames = array();
         /* @var $cache Cache */
-        $cache = is_string($this->db->schemaCache) ? Yii::$app->get($this->db->schemaCache, false) : $this->db->schemaCache;
+        $cache = is_string($this->db->schemaCache) ? ArSql::$app->get($this->db->schemaCache, false) : $this->db->schemaCache;
         if ($this->db->enableSchemaCache && $cache instanceof Cache) {
             $cache->delete($this->getCacheKey($name));
         }
