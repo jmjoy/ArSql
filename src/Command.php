@@ -37,12 +37,7 @@ class Command {
             $sqlHandler = ArSql::getSqlHandler();
         }
         $this->sqlHandler = $sqlHandler;
-        $schemaType = $this->sqlHandler->schemaType();
-        $schemaClass = "\\arSql\\{$schemaType}\\Schema";
-        if (!class_exists($schemaClass)) {
-            throw new NotSupportedException("Not supported schema type: {$schemaType}");
-        }
-        $this->schema = new $schemaClass();
+        $this->schema = ArSql::createSchema($this->sqlHandler);
         $this->builder = new Builder($this->schema);
 
         if ($sql) {

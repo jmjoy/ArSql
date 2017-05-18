@@ -5,15 +5,13 @@
  * @license http://www.yiiframework.com/license/
  */
 
-namespace test\data\ar;
+namespace arSql\exception;
 
 /**
- * ActiveRecord is ...
+ * InvalidCallException represents an exception caused by calling a method in a wrong way.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
  */
-class ActiveRecord extends \arSql\ActiveRecord {
+class InvalidCallException extends \BadMethodCallException {
 }
-
-

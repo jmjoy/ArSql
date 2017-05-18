@@ -134,12 +134,19 @@ class Query {
      */
     public $emulateExecution = false;
 
+
+    public function __construct($config = array()) {
+        foreach ($config as $name => $value) {
+            $this->$name = $value;
+        }
+    }
+
     /**
      * A new method for PHP5.3
      * @return Query
      */
-    public static function newInstance() {
-        return new static();
+    public static function newInstance($config = array()) {
+        return new static($config);
     }
 
     /**
@@ -149,6 +156,10 @@ class Query {
         $command = new Command($sqlHandler);
         list($sql, $params) = $command->getBuilder()->build($this);
         return $command->setSql($sql)->bindValues($params);
+    }
+
+    public function getRawSql(ISqlHandler $sqlHandler = null) {
+        return $this->createCommand($sqlHandler)->getRawSql();
     }
 
     /**

@@ -35,13 +35,14 @@ abstract class Schema
      * If left part is found in DB error message exception class from the right part is used.
      */
     public $exceptionMap = array(
-        'SQLSTATE[23' => 'yii\db\IntegrityException',
+        // 'SQLSTATE[23' => 'yii\db\IntegrityException',
+        'SQLSTATE[23' => 'Exception',
     );
     /**
      * @var string column schema class
      * @since 2.0.11
      */
-    public $columnSchemaClass = 'yii\db\ColumnSchema';
+    public $columnSchemaClass = 'arSql\ColumnSchema';
 
     /**
      * @var array list of ALL schema names in the database, except system schemas
@@ -67,7 +68,7 @@ abstract class Schema
      */
     protected function createColumnSchema()
     {
-        return ArSql::createObject($this->columnSchemaClass);
+        return new $this->columnSchemaClass;
     }
 
     /**
@@ -76,6 +77,23 @@ abstract class Schema
      * @return null|TableSchema DBMS-dependent table metadata, null if the table does not exist.
      */
     abstract protected function loadTableSchema($name);
+
+    /**
+     * Obtains the metadata for the named table.
+     * @param string $name table name. The table name may contain schema name if any. Do not quote the table name.
+     * @param bool $refresh whether to reload the table schema even if it is found in the cache.
+     * @return null|TableSchema table metadata. Null if the named table does not exist.
+     */
+    public function getTableSchema($name, $refresh = false)
+    {
+        if (array_key_exists($name, $this->_tables) && !$refresh) {
+            return $this->_tables[$name];
+        }
+
+        $realName = $this->getRawTableName($name);
+
+        return $this->_tables[$name] = $this->loadTableSchema($realName);
+    }
 
     /**
      * Returns the metadata for all tables in the database.
@@ -447,7 +465,7 @@ abstract class Schema
         if (strpos($name, '{{') !== false) {
             $name = preg_replace('/\\{\\{(.*?)\\}\\}/', '\1', $name);
 
-            return str_replace('%', $this->db->tablePrefix, $name);
+            return str_replace('%', ArSql::getTablePrefix(), $name);
         } else {
             return $name;
         }

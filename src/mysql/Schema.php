@@ -3,9 +3,9 @@
 namespace arSql\mysql;
 
 use arSql\Schema as BaseSchema;
-use yii\db\Expression;
-use yii\db\TableSchema;
-use yii\db\ColumnSchema;
+use arSql\TableSchema;
+use arSql\ArSql;
+use arSql\Expression;
 
 /**
  * Schema is the class for retrieving metadata from a MySQL database (version 4.1.x and 5.x).
@@ -92,7 +92,7 @@ class Schema extends BaseSchema {
         $this->resolveTableNames($table, $name);
 
         if ($this->findColumns($table)) {
-            $this->findConstraints($table);
+            // $this->findConstraints($table);
 
             return $table;
         } else {
@@ -192,7 +192,7 @@ class Schema extends BaseSchema {
     {
         $sql = 'SHOW FULL COLUMNS FROM ' . $this->quoteTableName($table->fullName);
         try {
-            $columns = $this->db->createCommand($sql)->queryAll();
+            $columns = ArSql::createCommand($sql)->queryAll();
         } catch (\Exception $e) {
             $previous = $e->getPrevious();
             if ($previous instanceof \PDOException && strpos($previous->getMessage(), 'SQLSTATE[42S02') !== false) {
@@ -203,9 +203,7 @@ class Schema extends BaseSchema {
             throw $e;
         }
         foreach ($columns as $info) {
-            if ($this->db->slavePdo->getAttribute(\PDO::ATTR_CASE) !== \PDO::CASE_LOWER) {
-                $info = array_change_key_case($info, CASE_LOWER);
-            }
+            $info = array_change_key_case($info, CASE_LOWER);
             $column = $this->loadColumnSchema($info);
             $table->columns[$column->name] = $column;
             if ($column->isPrimaryKey) {

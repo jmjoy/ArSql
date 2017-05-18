@@ -5,15 +5,15 @@
  * @license http://www.yiiframework.com/license/
  */
 
-namespace test\data\ar;
+namespace arSql\exception;
+
+use Exception;
 
 /**
- * ActiveRecord is ...
+ * UnknownPropertyException represents an exception caused by accessing unknown object properties.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
  */
-class ActiveRecord extends \arSql\ActiveRecord {
+class UnknownPropertyException extends Exception {
 }
-
-

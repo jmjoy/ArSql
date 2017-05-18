@@ -14,10 +14,9 @@ class RulesModel extends Model
     public $email;
     public $name;
 
-    public $rules = array();
+    public $scenarios;
 
-    public function rules()
-    {
-        return $this->rules;
+    public function scenarios() {
+        return array_merge(parent::scenarios(), $this->scenarios);
     }
 }

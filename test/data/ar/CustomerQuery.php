@@ -2,7 +2,7 @@
 
 namespace test\data\ar;
 
-use yii\db\ActiveQuery;
+use arSql\ActiveQuery;
 
 /**
  * CustomerQuery

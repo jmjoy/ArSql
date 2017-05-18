@@ -3,6 +3,7 @@
 namespace arSql;
 
 use Exception;
+use BadMethodCallException;
 use ArrayAccess;
 use ArrayObject;
 use ArrayIterator;
@@ -12,6 +13,7 @@ use arSql\lib\Inflector;
 use arSql\exception\InvalidConfigException;
 use arSql\validators\Validator;
 use arSql\validators\RequiredValidator;
+use arSql\exception\UnknownPropertyException;
 
 /**
  * Model is the base class for data models.
@@ -56,100 +58,11 @@ class Model implements IteratorAggregate, ArrayAccess
      * The name of the default scenario.
      */
     const SCENARIO_DEFAULT = 'default';
-    /**
-     * @event ModelEvent an event raised at the beginning of [[validate()]]. You may set
-     * [[ModelEvent::isValid]] to be false to stop the validation.
-     */
-    const EVENT_BEFORE_VALIDATE = 'beforeValidate';
-    /**
-     * @event Event an event raised at the end of [[validate()]]
-     */
-    const EVENT_AFTER_VALIDATE = 'afterValidate';
 
-    /**
-     * @var array validation errors (attribute name => array of errors)
-     */
-    private $_errors;
-    /**
-     * @var ArrayObject list of validators
-     */
-    private $_validators;
     /**
      * @var string current scenario
      */
     private $_scenario = self::SCENARIO_DEFAULT;
-
-
-    /**
-     * Returns the validation rules for attributes.
-     *
-     * Validation rules are used by [[validate()]] to check if attribute values are valid.
-     * Child classes may override this method to declare different validation rules.
-     *
-     * Each rule is an array with the following structure:
-     *
-     * ```php
-     * [
-     *     ['attribute1', 'attribute2'],
-     *     'validator type',
-     *     'on' => ['scenario1', 'scenario2'],
-     *     //...other parameters...
-     * ]
-     * ```
-     *
-     * where
-     *
-     *  - attribute list: required, specifies the attributes array to be validated, for single attribute you can pass a string;
-     *  - validator type: required, specifies the validator to be used. It can be a built-in validator name,
-     *    a method name of the model class, an anonymous function, or a validator class name.
-     *  - on: optional, specifies the [[scenario|scenarios]] array in which the validation
-     *    rule can be applied. If this option is not set, the rule will apply to all scenarios.
-     *  - additional name-value pairs can be specified to initialize the corresponding validator properties.
-     *    Please refer to individual validator class API for possible properties.
-     *
-     * A validator can be either an object of a class extending [[Validator]], or a model class method
-     * (called *inline validator*) that has the following signature:
-     *
-     * ```php
-     * // $params refers to validation parameters given in the rule
-     * function validatorName($attribute, $params)
-     * ```
-     *
-     * In the above `$attribute` refers to the attribute currently being validated while `$params` contains an array of
-     * validator configuration options such as `max` in case of `string` validator. The value of the attribute currently being validated
-     * can be accessed as `$this->$attribute`. Note the `$` before `attribute`; this is taking the value of the variable
-     * `$attribute` and using it as the name of the property to access.
-     *
-     * ArSql also provides a set of [[Validator::builtInValidators|built-in validators]].
-     * Each one has an alias name which can be used when specifying a validation rule.
-     *
-     * Below are some examples:
-     *
-     * ```php
-     * [
-     *     // built-in "required" validator
-     *     [['username', 'password'], 'required'],
-     *     // built-in "string" validator customized with "min" and "max" properties
-     *     ['username', 'string', 'min' => 3, 'max' => 12],
-     *     // built-in "compare" validator that is used in "register" scenario only
-     *     ['password', 'compare', 'compareAttribute' => 'password2', 'on' => 'register'],
-     *     // an inline validator defined via the "authenticate()" method in the model class
-     *     ['password', 'authenticate', 'on' => 'login'],
-     *     // a validator of class "DateRangeValidator"
-     *     ['dateRange', 'DateRangeValidator'],
-     * ];
-     * ```
-     *
-     * Note, in order to inherit rules defined in the parent class, a child class needs to
-     * merge the parent rules with child rules using functions such as `array_merge()`.
-     *
-     * @return array validation rules
-     * @see scenarios()
-     */
-    public function rules()
-    {
-        return array();
-    }
 
     /**
      * Returns a list of scenarios and the corresponding active attributes.
@@ -177,48 +90,12 @@ class Model implements IteratorAggregate, ArrayAccess
      */
     public function scenarios()
     {
-        $scenarios = array(self::SCENARIO_DEFAULT => array());
-        foreach ($this->getValidators() as $validator) {
-            foreach ($validator->on as $scenario) {
-                $scenarios[$scenario] = array();
-            }
-            foreach ($validator->except as $scenario) {
-                $scenarios[$scenario] = array();
-            }
-        }
-        $names = array_keys($scenarios);
-
-        foreach ($this->getValidators() as $validator) {
-            if (empty($validator->on) && empty($validator->except)) {
-                foreach ($names as $name) {
-                    foreach ($validator->attributes as $attribute) {
-                        $scenarios[$name][$attribute] = true;
-                    }
-                }
-            } elseif (empty($validator->on)) {
-                foreach ($names as $name) {
-                    if (!in_array($name, $validator->except, true)) {
-                        foreach ($validator->attributes as $attribute) {
-                            $scenarios[$name][$attribute] = true;
-                        }
-                    }
-                }
-            } else {
-                foreach ($validator->on as $name) {
-                    foreach ($validator->attributes as $attribute) {
-                        $scenarios[$name][$attribute] = true;
-                    }
-                }
-            }
-        }
-
-        foreach ($scenarios as $scenario => $attributes) {
-            if (!empty($attributes)) {
-                $scenarios[$scenario] = array_keys($attributes);
-            }
-        }
-
+        $scenarios = array(self::SCENARIO_DEFAULT => $this->defaultAttributes());
         return $scenarios;
+    }
+
+    protected function defaultAttributes() {
+        return array();
     }
 
     /**
@@ -306,169 +183,6 @@ class Model implements IteratorAggregate, ArrayAccess
     }
 
     /**
-     * Performs the data validation.
-     *
-     * This method executes the validation rules applicable to the current [[scenario]].
-     * The following criteria are used to determine whether a rule is currently applicable:
-     *
-     * - the rule must be associated with the attributes relevant to the current scenario;
-     * - the rules must be effective for the current scenario.
-     *
-     * This method will call [[beforeValidate()]] and [[afterValidate()]] before and
-     * after the actual validation, respectively. If [[beforeValidate()]] returns false,
-     * the validation will be cancelled and [[afterValidate()]] will not be called.
-     *
-     * Errors found during the validation can be retrieved via [[getErrors()]],
-     * [[getFirstErrors()]] and [[getFirstError()]].
-     *
-     * @param array $attributeNames list of attribute names that should be validated.
-     * If this parameter is empty, it means any attribute listed in the applicable
-     * validation rules should be validated.
-     * @param bool $clearErrors whether to call [[clearErrors()]] before performing validation
-     * @return bool whether the validation is successful without any error.
-     * @throws InvalidParamException if the current scenario is unknown.
-     */
-    public function validate($attributeNames = null, $clearErrors = true)
-    {
-        if ($clearErrors) {
-            $this->clearErrors();
-        }
-
-        if (!$this->beforeValidate()) {
-            return false;
-        }
-
-        $scenarios = $this->scenarios();
-        $scenario = $this->getScenario();
-        if (!isset($scenarios[$scenario])) {
-            throw new InvalidParamException("Unknown scenario: $scenario");
-        }
-
-        if ($attributeNames === null) {
-            $attributeNames = $this->activeAttributes();
-        }
-
-        foreach ($this->getActiveValidators() as $validator) {
-            $validator->validateAttributes($this, $attributeNames);
-        }
-        $this->afterValidate();
-
-        return !$this->hasErrors();
-    }
-
-    /**
-     * This method is invoked before validation starts.
-     * The default implementation raises a `beforeValidate` event.
-     * You may override this method to do preliminary checks before validation.
-     * Make sure the parent implementation is invoked so that the event can be raised.
-     * @return bool whether the validation should be executed. Defaults to true.
-     * If false is returned, the validation will stop and the model is considered invalid.
-     */
-    public function beforeValidate()
-    {
-        return true;
-    }
-
-    /**
-     * This method is invoked after validation ends.
-     * The default implementation raises an `afterValidate` event.
-     * You may override this method to do postprocessing after validation.
-     * Make sure the parent implementation is invoked so that the event can be raised.
-     */
-    public function afterValidate()
-    {
-        // $this->trigger(self::EVENT_AFTER_VALIDATE);
-    }
-
-    /**
-     * Returns all the validators declared in [[rules()]].
-     *
-     * This method differs from [[getActiveValidators()]] in that the latter
-     * only returns the validators applicable to the current [[scenario]].
-     *
-     * Because this method returns an ArrayObject object, you may
-     * manipulate it by inserting or removing validators (useful in model behaviors).
-     * For example,
-     *
-     * ```php
-     * $model->validators[] = $newValidator;
-     * ```
-     *
-     * @return ArrayObject|\yii\validators\Validator[] all the validators declared in the model.
-     */
-    public function getValidators()
-    {
-        if ($this->_validators === null) {
-            $this->_validators = $this->createValidators();
-        }
-        return $this->_validators;
-    }
-
-    /**
-     * Returns the validators applicable to the current [[scenario]].
-     * @param string $attribute the name of the attribute whose applicable validators should be returned.
-     * If this is null, the validators for ALL attributes in the model will be returned.
-     * @return \yii\validators\Validator[] the validators applicable to the current [[scenario]].
-     */
-    public function getActiveValidators($attribute = null)
-    {
-        $validators = array();
-        $scenario = $this->getScenario();
-        foreach ($this->getValidators() as $validator) {
-            if ($validator->isActive($scenario) && ($attribute === null || in_array($attribute, $validator->getAttributeNames(), true))) {
-                $validators[] = $validator;
-            }
-        }
-        return $validators;
-    }
-
-    /**
-     * Creates validator objects based on the validation rules specified in [[rules()]].
-     * Unlike [[getValidators()]], each time this method is called, a new list of validators will be returned.
-     * @return ArrayObject validators
-     * @throws InvalidConfigException if any validation rule configuration is invalid
-     */
-    public function createValidators()
-    {
-        $validators = new ArrayObject;
-        foreach ($this->rules() as $rule) {
-            if ($rule instanceof Validator) {
-                $validators->append($rule);
-            } elseif (is_array($rule) && isset($rule[0], $rule[1])) { // attributes, validator type
-                $validator = Validator::createValidator($rule[1], $this, (array) $rule[0], array_slice($rule, 2));
-                $validators->append($validator);
-            } else {
-                throw new InvalidConfigException('Invalid validation rule: a rule must specify both attribute names and validator type.');
-            }
-        }
-        return $validators;
-    }
-
-    /**
-     * Returns a value indicating whether the attribute is required.
-     * This is determined by checking if the attribute is associated with a
-     * [[\yii\validators\RequiredValidator|required]] validation rule in the
-     * current [[scenario]].
-     *
-     * Note that when the validator has a conditional validation applied using
-     * [[\yii\validators\RequiredValidator::$when|$when]] this method will return
-     * `false` regardless of the `when` condition because it may be called be
-     * before the model is loaded with data.
-     *
-     * @param string $attribute attribute name
-     * @return bool whether the attribute is required
-     */
-    public function isAttributeRequired($attribute)
-    {
-        foreach ($this->getActiveValidators($attribute) as $validator) {
-            if ($validator instanceof RequiredValidator && $validator->when === null) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Returns a value indicating whether the attribute is safe for massive assignments.
      * @param string $attribute attribute name
      * @return bool whether the attribute is safe for massive assignments
@@ -514,125 +228,6 @@ class Model implements IteratorAggregate, ArrayAccess
     {
         $hints = $this->attributeHints();
         return isset($hints[$attribute]) ? $hints[$attribute] : '';
-    }
-
-    /**
-     * Returns a value indicating whether there is any validation error.
-     * @param string|null $attribute attribute name. Use null to check all attributes.
-     * @return bool whether there is any error.
-     */
-    public function hasErrors($attribute = null)
-    {
-        return $attribute === null ? !empty($this->_errors) : isset($this->_errors[$attribute]);
-    }
-
-    /**
-     * Returns the errors for all attributes or a single attribute.
-     * @param string $attribute attribute name. Use null to retrieve errors for all attributes.
-     * @property array An array of errors for all attributes. Empty array is returned if no error.
-     * The result is a two-dimensional array. See [[getErrors()]] for detailed description.
-     * @return array errors for all attributes or the specified attribute. Empty array is returned if no error.
-     * Note that when returning errors for all attributes, the result is a two-dimensional array, like the following:
-     *
-     * ```php
-     * [
-     *     'username' => [
-     *         'Username is required.',
-     *         'Username must contain only word characters.',
-     *     ],
-     *     'email' => [
-     *         'Email address is invalid.',
-     *     ]
-     * ]
-     * ```
-     *
-     * @see getFirstErrors()
-     * @see getFirstError()
-     */
-    public function getErrors($attribute = null)
-    {
-        if ($attribute === null) {
-            return $this->_errors === null ? array() : $this->_errors;
-        }
-        return isset($this->_errors[$attribute]) ? $this->_errors[$attribute] : array();
-    }
-
-    /**
-     * Returns the first error of every attribute in the model.
-     * @return array the first errors. The array keys are the attribute names, and the array
-     * values are the corresponding error messages. An empty array will be returned if there is no error.
-     * @see getErrors()
-     * @see getFirstError()
-     */
-    public function getFirstErrors()
-    {
-        if (empty($this->_errors)) {
-            return array();
-        }
-
-        $errors = array();
-        foreach ($this->_errors as $name => $es) {
-            if (!empty($es)) {
-                $errors[$name] = reset($es);
-            }
-        }
-        return $errors;
-    }
-
-    /**
-     * Returns the first error of the specified attribute.
-     * @param string $attribute attribute name.
-     * @return string the error message. Null is returned if no error.
-     * @see getErrors()
-     * @see getFirstErrors()
-     */
-    public function getFirstError($attribute)
-    {
-        return isset($this->_errors[$attribute]) ? reset($this->_errors[$attribute]) : null;
-    }
-
-    /**
-     * Adds a new error to the specified attribute.
-     * @param string $attribute attribute name
-     * @param string $error new error message
-     */
-    public function addError($attribute, $error = '')
-    {
-        $this->_errors[$attribute][] = $error;
-    }
-
-    /**
-     * Adds a list of errors.
-     * @param array $items a list of errors. The array keys must be attribute names.
-     * The array values should be error messages. If an attribute has multiple errors,
-     * these errors must be given in terms of an array.
-     * You may use the result of [[getErrors()]] as the value for this parameter.
-     * @since 2.0.2
-     */
-    public function addErrors(array $items)
-    {
-        foreach ($items as $attribute => $errors) {
-            if (is_array($errors)) {
-                foreach ($errors as $error) {
-                    $this->addError($attribute, $error);
-                }
-            } else {
-                $this->addError($attribute, $errors);
-            }
-        }
-    }
-
-    /**
-     * Removes errors for all attributes or a single attribute.
-     * @param string $attribute attribute name. Use null to remove errors for all attributes.
-     */
-    public function clearErrors($attribute = null)
-    {
-        if ($attribute === null) {
-            $this->_errors = array();
-        } else {
-            unset($this->_errors[$attribute]);
-        }
     }
 
     /**
@@ -860,28 +455,6 @@ class Model implements IteratorAggregate, ArrayAccess
     }
 
     /**
-     * Validates multiple models.
-     * This method will validate every model. The models being validated may
-     * be of the same or different types.
-     * @param array $models the models to be validated
-     * @param array $attributeNames list of attribute names that should be validated.
-     * If this parameter is empty, it means any attribute listed in the applicable
-     * validation rules should be validated.
-     * @return bool whether all models are valid. False will be returned if one
-     * or multiple models have validation error.
-     */
-    public static function validateMultiple($models, $attributeNames = null)
-    {
-        $valid = true;
-        /* @var $model Model */
-        foreach ($models as $model) {
-            $valid = $model->validate($attributeNames) && $valid;
-        }
-
-        return $valid;
-    }
-
-    /**
      * Returns the list of fields that should be returned by default by [[toArray()]] when no specific fields are specified.
      *
      * A field is a named element in the returned array by [[toArray()]].
@@ -1008,9 +581,9 @@ class Model implements IteratorAggregate, ArrayAccess
         if (method_exists($this, $getter)) {
             return $this->$getter();
         } elseif (method_exists($this, 'set' . $name)) {
-            throw new Exception('Getting write-only property: ' . get_class($this) . '::' . $name);
+            throw new BadMethodCallException('Getting write-only property: ' . get_class($this) . '::' . $name);
         } else {
-            throw new Exception('Getting unknown property: ' . get_class($this) . '::' . $name);
+            throw new UnknownPropertyException('Getting unknown property: ' . get_class($this) . '::' . $name);
         }
     }
 
@@ -1031,9 +604,9 @@ class Model implements IteratorAggregate, ArrayAccess
         if (method_exists($this, $setter)) {
             $this->$setter($value);
         } elseif (method_exists($this, 'get' . $name)) {
-            throw new Exception('Setting read-only property: ' . get_class($this) . '::' . $name);
+            throw new BadMethodCallException('Setting read-only property: ' . get_class($this) . '::' . $name);
         } else {
-            throw new Exception('Setting unknown property: ' . get_class($this) . '::' . $name);
+            throw new UnknownPropertyException('Setting unknown property: ' . get_class($this) . '::' . $name);
         }
     }
 
@@ -1076,7 +649,7 @@ class Model implements IteratorAggregate, ArrayAccess
         if (method_exists($this, $setter)) {
             $this->$setter(null);
         } elseif (method_exists($this, 'get' . $name)) {
-            throw new Exception('Unsetting read-only property: ' . get_class($this) . '::' . $name);
+            throw new BadMethodCallException('Unsetting read-only property: ' . get_class($this) . '::' . $name);
         }
     }
 
@@ -1092,7 +665,7 @@ class Model implements IteratorAggregate, ArrayAccess
      */
     public function __call($name, $params)
     {
-        throw new Exception('Calling unknown method: ' . get_class($this) . "::$name()");
+        throw new BadMethodCallException('Calling unknown method: ' . get_class($this) . "::$name()");
     }
 
     /**

@@ -1,9 +1,6 @@
 <?php
 namespace test\data\ar;
 
-use yii\db\ActiveQuery;
-use test\framework\db\ActiveRecordTest;
-
 /**
  * Class Customer
  *

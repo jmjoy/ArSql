@@ -7,10 +7,7 @@
 
 namespace arSql;
 
-use yii\base\InvalidConfigException;
-use yii\helpers\ArrayHelper;
-use yii\helpers\Inflector;
-use yii\helpers\StringHelper;
+use arSql\exception\InvalidConfigException;
 
 /**
  * ActiveRecord is the base class for classes representing relational data in terms of objects.
@@ -119,17 +116,6 @@ class ActiveRecord extends BaseActiveRecord
             }
         }
         return $this;
-    }
-
-    /**
-     * Returns the database connection used by this AR class.
-     * By default, the "db" application component is used as the database connection.
-     * You may override this method if you want to use a different database connection.
-     * @return Connection the database connection used by this AR class.
-     */
-    public static function getDb()
-    {
-        return Yii::$app->getDb();
     }
 
     /**
@@ -324,8 +310,7 @@ class ActiveRecord extends BaseActiveRecord
      */
     public static function getTableSchema()
     {
-        $tableSchema = static::getDb()
-            ->getSchema()
+        $tableSchema = ArSql::createSchema()
             ->getTableSchema(static::tableName());
 
         if ($tableSchema === null) {

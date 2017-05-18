@@ -13,13 +13,9 @@ class Singer extends Model
     public $lastName;
     public $test;
 
-    public function rules()
-    {
+    public function scenarios() {
         return array(
-            array(array('lastName'), 'default', 'value' => 'Lennon'),
-            array(array('lastName'), 'required'),
-            array(array('underscore_style'), 'number'),
-            array(array('test'), 'required', 'when' => function($model) { return $model->firstName === 'cebe'; }),
+            static::SCENARIO_DEFAULT => array('lastName', 'underscore_style', 'test'),
         );
     }
 }
