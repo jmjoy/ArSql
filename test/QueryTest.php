@@ -7,6 +7,10 @@ use arSql\Expression;
 
 class QueryTest extends TestCase {
 
+    public function setUp() {
+        
+    }
+
     public function testSelect() {
         // default
         $query = new Query;

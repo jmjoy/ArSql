@@ -1,6 +1,8 @@
 <?php
 namespace test\data\ar;
 
+use test\ActiveRecordTest;
+
 /**
  * Class Customer
  *
@@ -80,9 +82,9 @@ class Customer extends ActiveRecord
 
     public function afterSave($insert, $changedAttributes)
     {
-        ActiveRecordTest::$afterSaveInsert = $insert;
-        ActiveRecordTest::$afterSaveNewRecord = $this->isNewRecord;
-        parent::afterSave($insert, $changedAttributes);
+        // ActiveRecordTest::$afterSaveInsert = $insert;
+        // ActiveRecordTest::$afterSaveNewRecord = $this->isNewRecord;
+        // parent::afterSave($insert, $changedAttributes);
     }
 
     /**

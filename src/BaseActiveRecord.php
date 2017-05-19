@@ -8,6 +8,7 @@
 namespace arSql;
 
 use arSql\exception\InvalidParamException;
+use arSql\exception\StaleObjectException;
 
 /**
  * ActiveRecord is the base class for classes representing relational data in terms of objects.
@@ -1250,7 +1251,7 @@ abstract class BaseActiveRecord extends Model
                 $record->insert(false);
             } else {
                 /* @var $viaTable string */
-                static::getDb()->createCommand()
+                ArSql::createCommand()
                     ->insert($viaTable, $columns)->execute();
             }
         } else {
@@ -1340,7 +1341,7 @@ abstract class BaseActiveRecord extends Model
             } else {
                 /* @var $viaTable string */
                 /* @var $command Command */
-                $command = static::getDb()->createCommand();
+                $command = ArSql::createCommand();
                 if ($delete) {
                     $command->delete($viaTable, $columns)->execute();
                 } else {
@@ -1436,7 +1437,7 @@ abstract class BaseActiveRecord extends Model
             } else {
                 /* @var $viaTable string */
                 /* @var $command Command */
-                $command = static::getDb()->createCommand();
+                $command = ArSql::createCommand();
                 if ($delete) {
                     $command->delete($viaTable, $condition)->execute();
                 } else {

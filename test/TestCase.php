@@ -25,12 +25,11 @@ abstract class TestCase extends PHPUnit_Framework_TestCase {
             $mysqlConfig = $config['database']['mysql'];
             static::$pdo = new PDO($mysqlConfig['dsn'], $mysqlConfig['username'], $mysqlConfig['password']);
 
-            static::prepareDatabase($mysqlConfig['fixture']);
-
             static::$sqlHandler = new MySqlHandler(static::$pdo);
             static::$command = new Command(static::$sqlHandler);
-
             ArSql::registerSqlHandler(static::$sqlHandler);
+
+            static::prepareDatabase($mysqlConfig['fixture']);
         }
     }
 

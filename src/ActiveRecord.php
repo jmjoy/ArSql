@@ -10,6 +10,8 @@ namespace arSql;
 use arSql\contract\ISqlHandler;
 use arSql\exception\InvalidConfigException;
 use arSql\lib\ArrayHelper;
+use arSql\lib\Inflector;
+use arSql\lib\StringHelper;
 
 /**
  * ActiveRecord is the base class for classes representing relational data in terms of objects.
@@ -237,10 +239,10 @@ class ActiveRecord extends BaseActiveRecord
     {
         $n = 0;
         foreach ($counters as $name => $value) {
-            $counters[$name] = new Expression("[[$name]]+:bp{$n}", array(":bp{$n}" => $value));
+            $counters[$name] = new Expression("$name+:bp{$n}", array(":bp{$n}" => $value));
             $n++;
         }
-        $command = static::getDb()->createCommand();
+        $command = ArSql::createCommand();
         $command->update(static::tableName(), $counters, $condition, $params);
 
         return $command->execute();
@@ -277,7 +279,7 @@ class ActiveRecord extends BaseActiveRecord
      */
     public static function deleteAll($condition = null, $params = array())
     {
-        $command = static::getDb()->createCommand();
+        $command = ArSql::createCommand();
         $command->delete(static::tableName(), $condition, $params);
 
         return $command->execute();
@@ -302,7 +304,8 @@ class ActiveRecord extends BaseActiveRecord
      */
     public static function tableName()
     {
-        return '{{%' . Inflector::camel2id(StringHelper::basename(get_called_class()), '_') . '}}';
+        // return '{{%' . Inflector::camel2id(StringHelper::basename(get_called_class()), '_') . '}}';
+        return Inflector::camel2id(StringHelper::basename(get_called_class()), '_');
     }
 
     /**
@@ -442,7 +445,7 @@ class ActiveRecord extends BaseActiveRecord
             return $this->insertInternal($attributes);
         }
 
-        $transaction = static::getDb()->beginTransaction();
+        $transaction = ArSql::beginTransaction();
         try {
             $result = $this->insertInternal($attributes);
             if ($result === false) {
@@ -546,7 +549,7 @@ class ActiveRecord extends BaseActiveRecord
             return $this->updateInternal($attributeNames);
         }
 
-        $transaction = static::getDb()->beginTransaction();
+        $transaction = ArSql::beginTransaction();
         try {
             $result = $this->updateInternal($attributeNames);
             if ($result === false) {
@@ -589,7 +592,7 @@ class ActiveRecord extends BaseActiveRecord
             return $this->deleteInternal();
         }
 
-        $transaction = static::getDb()->beginTransaction();
+        $transaction = ArSql::beginTransaction();
         try {
             $result = $this->deleteInternal();
             if ($result === false) {

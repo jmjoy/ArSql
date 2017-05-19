@@ -452,6 +452,7 @@ class Query {
             return $command->queryScalar();
         } else {
             $query = new static();
+            $query = new self();
             return $query->select(array($selectExpression))
                 ->from(array('c' => $this))
                 ->createCommand($sqlHandler)
