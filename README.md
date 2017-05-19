@@ -2,6 +2,8 @@
 
 The PHP library implements ActiveRecord by returning raw SQL.
 
+A transplant of [yii2](https://github.com/yiisoft/yii2) ORM for PHP5.3 and NO PDO scene.
+
 # Start
 
 ```shell
