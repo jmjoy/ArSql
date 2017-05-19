@@ -49,8 +49,8 @@ class BuilderTest extends TestCase {
             // in
             array( array('in', 'id', array(1, 2, 3)), '[[id]] IN (:qp0, :qp1, :qp2)', array(':qp0' => 1, ':qp1' => 2, ':qp2' => 3) ),
             array( array('not in', 'id', array(1, 2, 3)), '[[id]] NOT IN (:qp0, :qp1, :qp2)', array(':qp0' => 1, ':qp1' => 2, ':qp2' => 3) ),
-            array( array('in', 'id', Query::newInstance()->select('id')->from('users')->where(array('active' => 1))), '[[id]] IN (SELECT [[id]] FROM [[users]] WHERE [[active]]=:qp0)', array(':qp0' => 1) ),
-            array( array('not in', 'id', Query::newInstance()->select('id')->from('users')->where(array('active' => 1))), '[[id]] NOT IN (SELECT [[id]] FROM [[users]] WHERE [[active]]=:qp0)', array(':qp0' => 1) ),
+            array( array('in', 'id', Query::instantiate()->select('id')->from('users')->where(array('active' => 1))), '[[id]] IN (SELECT [[id]] FROM [[users]] WHERE [[active]]=:qp0)', array(':qp0' => 1) ),
+            array( array('not in', 'id', Query::instantiate()->select('id')->from('users')->where(array('active' => 1))), '[[id]] NOT IN (SELECT [[id]] FROM [[users]] WHERE [[active]]=:qp0)', array(':qp0' => 1) ),
             array( array('in', 'id', 1),   '[[id]]=:qp0', array(':qp0' => 1) ),
             array( array('in', 'id', array(1)), '[[id]]=:qp0', array(':qp0' => 1) ),
             array( array('in', 'id', new ArrayObject(array(1))), '[[id]]=:qp0', array(':qp0' => 1) ),
@@ -73,8 +73,8 @@ class BuilderTest extends TestCase {
             ),
 
             // exists
-            array( array('exists', Query::newInstance()->select('id')->from('users')->where(array('active' => 1))), 'EXISTS (SELECT [[id]] FROM [[users]] WHERE [[active]]=:qp0)', array(':qp0' => 1) ),
-            array( array('not exists', Query::newInstance()->select('id')->from('users')->where(array('active' => 1))), 'NOT EXISTS (SELECT [[id]] FROM [[users]] WHERE [[active]]=:qp0)', array(':qp0' => 1) ),
+            array( array('exists', Query::instantiate()->select('id')->from('users')->where(array('active' => 1))), 'EXISTS (SELECT [[id]] FROM [[users]] WHERE [[active]]=:qp0)', array(':qp0' => 1) ),
+            array( array('not exists', Query::instantiate()->select('id')->from('users')->where(array('active' => 1))), 'NOT EXISTS (SELECT [[id]] FROM [[users]] WHERE [[active]]=:qp0)', array(':qp0' => 1) ),
 
             // simple conditions
             array( array('=', 'a', 'b'), '[[a]] = :qp0', array(':qp0' => 'b') ),

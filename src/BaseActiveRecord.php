@@ -1627,5 +1627,10 @@ abstract class BaseActiveRecord extends Model
             unset($this->$offset);
         }
     }
+
+    public static function className() {
+        return get_called_class();
+    }
+
 }
 

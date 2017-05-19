@@ -369,22 +369,19 @@ class ActiveQuery extends Query
     /**
      * @inheritdoc
      */
-    protected function queryScalar($selectExpression, $db)
+    protected function queryScalar($selectExpression, ISqlHandler $sqlHandler = null)
     {
         /* @var $modelClass ActiveRecord */
         $modelClass = $this->modelClass;
-        if ($db === null) {
-            $db = $modelClass::getDb();
-        }
 
         if ($this->sql === null) {
-            return parent::queryScalar($selectExpression, $db);
+            return parent::queryScalar($selectExpression, $sqlHandler);
         }
 
-        return Query::newInstance()->select(array($selectExpression))
+        return Query::instantiate()->select(array($selectExpression))
             ->from(array('c' => "({$this->sql})"))
             ->params($this->params)
-            ->createCommand($db)
+            ->createCommand($sqlHandler)
             ->queryScalar();
     }
 

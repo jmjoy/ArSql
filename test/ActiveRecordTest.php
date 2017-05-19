@@ -71,57 +71,57 @@ class ActiveRecordTest extends TestCase
         $this->assertEquals(4, $customer->status2);
     }
 
-//    public function testStatisticalFind()
-//    {
-//        // find count, sum, average, min, max, scalar
-//        $this->assertEquals(3, Customer::find()->count());
-//        $this->assertEquals(2, Customer::find()->where('[[id]]=1 OR [[id]]=2')->count());
-//        $this->assertEquals(6, Customer::find()->sum('[[id]]'));
-//        $this->assertEquals(2, Customer::find()->average('[[id]]'));
-//        $this->assertEquals(1, Customer::find()->min('[[id]]'));
-//        $this->assertEquals(3, Customer::find()->max('[[id]]'));
-//        $this->assertEquals(3, Customer::find()->select('COUNT(*)')->scalar());
-//    }
-//
-//    public function testFindScalar()
-//    {
-//        // query scalar
-//        $customerName = Customer::find()->where(['[[id]]' => 2])->select('[[name]]')->scalar();
-//        $this->assertEquals('user2', $customerName);
-//    }
-//
-//    public function testFindExists()
-//    {
-//        $this->assertTrue(Customer::find()->where(['[[id]]' => 2])->exists());
-//        $this->assertFalse(Customer::find()->where(['[[id]]' => 42])->exists());
-//        $this->assertTrue(Customer::find()->where(['[[id]]' => 2])->select('[[name]]')->exists());
-//        $this->assertFalse(Customer::find()->where(['[[id]]' => 42])->select('[[name]]')->exists());
-//    }
-//
-//    public function testFindColumn()
-//    {
-//        /* @var $this TestCase|ActiveRecordTestTrait */
-//        $this->assertEquals(['user1', 'user2', 'user3'], Customer::find()->select('[[name]]')->column());
-//        $this->assertEquals(['user3', 'user2', 'user1'], Customer::find()->orderBy(['[[name]]' => SORT_DESC])->select('[[name]]')->column());
-//    }
-//
-//    public function testFindBySql()
-//    {
-//        // find one
-//        $customer = Customer::findBySql('SELECT * FROM {{customer}} ORDER BY [[id]] DESC')->one();
-//        $this->assertInstanceOf(Customer::className(), $customer);
-//        $this->assertEquals('user3', $customer->name);
-//
-//        // find all
-//        $customers = Customer::findBySql('SELECT * FROM {{customer}}')->all();
-//        $this->assertCount(3, $customers);
-//
-//        // find with parameter binding
-//        $customer = Customer::findBySql('SELECT * FROM {{customer}} WHERE [[id]]=:id', [':id' => 2])->one();
-//        $this->assertInstanceOf(Customer::className(), $customer);
-//        $this->assertEquals('user2', $customer->name);
-//    }
-//
+    public function testStatisticalFind()
+    {
+        // find count, sum, average, min, max, scalar
+        $this->assertEquals(3, Customer::find()->count());
+        $this->assertEquals(2, Customer::find()->where('id=1 OR id=2')->count());
+        $this->assertEquals(6, Customer::find()->sum('id'));
+        $this->assertEquals(2, Customer::find()->average('id'));
+        $this->assertEquals(1, Customer::find()->min('id'));
+        $this->assertEquals(3, Customer::find()->max('id'));
+        $this->assertEquals(3, Customer::find()->select('COUNT(*)')->scalar());
+    }
+
+   public function testFindScalar()
+   {
+       // query scalar
+       $customerName = Customer::find()->where(array('id' => 2))->select('name')->scalar();
+       $this->assertEquals('user2', $customerName);
+   }
+
+    public function testFindExists()
+    {
+        $this->assertTrue(Customer::find()->where(array('id' => 2))->exists());
+        $this->assertFalse(Customer::find()->where(array('id' => 42))->exists());
+        $this->assertTrue(Customer::find()->where(array('id' => 2))->select('name')->exists());
+        $this->assertFalse(Customer::find()->where(array('id' => 42))->select('name')->exists());
+    }
+
+   public function testFindColumn()
+   {
+       /* @var $this TestCase|ActiveRecordTestTrait */
+       $this->assertEquals(array('user1', 'user2', 'user3'), Customer::find()->select('name')->column());
+       $this->assertEquals(array('user3', 'user2', 'user1'), Customer::find()->orderBy(array('name' => SORT_DESC))->select('name')->column());
+   }
+
+    public function testFindBySql()
+    {
+        // find one
+        $customer = Customer::findBySql('SELECT * FROM customer ORDER BY id DESC')->one();
+        $this->assertInstanceOf(Customer::className(), $customer);
+        $this->assertEquals('user3', $customer->name);
+
+        // find all
+        $customers = Customer::findBySql('SELECT * FROM customer')->all();
+        $this->assertCount(3, $customers);
+
+        // find with parameter binding
+        $customer = Customer::findBySql('SELECT * FROM customer WHERE id=:id', array(':id' => 2))->one();
+        $this->assertInstanceOf(Customer::className(), $customer);
+        $this->assertEquals('user2', $customer->name);
+    }
+
 //    /**
 //     * @depends testFindBySql
 //     *
@@ -2636,3 +2636,7 @@ class ActiveRecordTest extends TestCase
 //        $this->assertFalse($customer->canSetProperty('non_existing_property'));
 //    }
 }
+
+
+
+

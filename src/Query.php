@@ -145,7 +145,7 @@ class Query {
      * A new method for PHP5.3
      * @return Query
      */
-    public static function newInstance($config = array()) {
+    public static function instantiate($config = array()) {
         return new static($config);
     }
 
