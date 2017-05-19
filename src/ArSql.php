@@ -12,6 +12,8 @@ class ArSql {
 
     protected static $sqlHandler;
 
+    protected static $schemas = array();
+
     public static function registerSqlHandler(ISqlHandler $sqlHandler) {
         static::$sqlHandler = $sqlHandler;
     }
@@ -27,16 +29,19 @@ class ArSql {
         return new Command(static::getSqlHandler(), $sql, $params);
     }
 
-    public static function createSchema(ISqlHandler $sqlHandler = null) {
+    public static function getSchema(ISqlHandler $sqlHandler = null) {
         if (!$sqlHandler) {
             $sqlHandler = static::getSqlHandler();
         }
         $schemaType = $sqlHandler->schemaType();
-        $schemaClass = "\\arSql\\{$schemaType}\\Schema";
-        if (!class_exists($schemaClass)) {
-            throw new NotSupportedException("Not supported schema type: {$schemaType}");
+        if (!isset(static::$schemas[$schemaType])) {
+            $schemaClass = "\\arSql\\{$schemaType}\\Schema";
+            if (!class_exists($schemaClass)) {
+                throw new NotSupportedException("Not supported schema type: {$schemaType}");
+            }
+            static::$schemas[$schemaType] = new $schemaClass($sqlHandler);
         }
-        return new $schemaClass();
+        return static::$schemas[$schemaType];
     }
 
     public static function getTablePrefix() {

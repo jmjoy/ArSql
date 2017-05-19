@@ -1028,13 +1028,13 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testUnlinkAllViaTable()
     {
-        /* @var $orderClass \yii\db\ActiveRecordInterface */
+        /* @var $orderClass \yii\db\ActiveRecord */
         $orderClass = $this->getOrderClass();
-        /* @var $orderItemClass \yii\db\ActiveRecordInterface */
+        /* @var $orderItemClass \yii\db\ActiveRecord */
         $orderItemClass = $this->getOrderItemClass();
-        /* @var $itemClass \yii\db\ActiveRecordInterface */
+        /* @var $itemClass \yii\db\ActiveRecord */
         $itemClass = $this->getItemClass();
-        /* @var $orderItemsWithNullFKClass \yii\db\ActiveRecordInterface */
+        /* @var $orderItemsWithNullFKClass \yii\db\ActiveRecord */
         $orderItemsWithNullFKClass = $this->getOrderItemWithNullFKmClass();
 
         // via table with delete
@@ -1427,7 +1427,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testFind()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
         /* @var $this TestCase|ActiveRecordTestTrait */
         // find one
@@ -1478,7 +1478,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testFindAsArray()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
 
         // asArray
@@ -1514,7 +1514,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testHasAttribute()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
 
         $customer = new $customerClass;
@@ -1534,7 +1534,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testFindScalar()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
 
         /* @var $this TestCase|ActiveRecordTestTrait */
@@ -1551,7 +1551,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testFindColumn()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
 
         /* @var $this TestCase|ActiveRecordTestTrait */
@@ -1561,7 +1561,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testFindIndexBy()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
         /* @var $this TestCase|ActiveRecordTestTrait */
         // indexBy
@@ -1583,7 +1583,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testFindIndexByAsArray()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
 
         /* @var $this TestCase|ActiveRecordTestTrait */
@@ -1630,7 +1630,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testRefresh()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
         /* @var $this TestCase|ActiveRecordTestTrait */
         $customer = new $customerClass();
@@ -1644,9 +1644,9 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testEquals()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
-        /* @var $itemClass \yii\db\ActiveRecordInterface */
+        /* @var $itemClass \yii\db\ActiveRecord */
         $itemClass = $this->getItemClass();
 
         /* @var $this TestCase|ActiveRecordTestTrait */
@@ -1672,7 +1672,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testFindCount()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
 
         /* @var $this TestCase|ActiveRecordTestTrait */
@@ -1692,7 +1692,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testFindLimit()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
 
         /* @var $this TestCase|ActiveRecordTestTrait */
@@ -1740,7 +1740,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testFindComplexCondition()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
 
         /* @var $this TestCase|ActiveRecordTestTrait */
@@ -1756,7 +1756,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testFindNullValues()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
 
         /* @var $this TestCase|ActiveRecordTestTrait */
@@ -1772,7 +1772,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testExists()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
 
         /* @var $this TestCase|ActiveRecordTestTrait */
@@ -1788,7 +1788,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testFindLazy()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
 
         /* @var $this TestCase|ActiveRecordTestTrait */
@@ -1816,9 +1816,9 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testFindEager()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
-        /* @var $orderClass \yii\db\ActiveRecordInterface */
+        /* @var $orderClass \yii\db\ActiveRecord */
         $orderClass = $this->getOrderClass();
 
         /* @var $this TestCase|ActiveRecordTestTrait */
@@ -1853,7 +1853,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testFindLazyVia()
     {
-        /* @var $orderClass \yii\db\ActiveRecordInterface */
+        /* @var $orderClass \yii\db\ActiveRecord */
         $orderClass = $this->getOrderClass();
 
         /* @var $this TestCase|ActiveRecordTestTrait */
@@ -1867,7 +1867,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testFindLazyVia2()
     {
-        /* @var $orderClass \yii\db\ActiveRecordInterface */
+        /* @var $orderClass \yii\db\ActiveRecord */
         $orderClass = $this->getOrderClass();
 
         /* @var $this TestCase|ActiveRecordTestTrait */
@@ -1879,7 +1879,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testFindEagerViaRelation()
     {
-        /* @var $orderClass \yii\db\ActiveRecordInterface */
+        /* @var $orderClass \yii\db\ActiveRecord */
         $orderClass = $this->getOrderClass();
 
         /* @var $this TestCase|ActiveRecordTestTrait */
@@ -1895,7 +1895,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testFindNestedRelation()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
 
         /* @var $this TestCase|ActiveRecordTestTrait */
@@ -1931,7 +1931,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
      */
     public function testFindEagerViaRelationPreserveOrder()
     {
-        /* @var $orderClass \yii\db\ActiveRecordInterface */
+        /* @var $orderClass \yii\db\ActiveRecord */
         $orderClass = $this->getOrderClass();
 
         /* @var $this TestCase|ActiveRecordTestTrait */
@@ -1994,7 +1994,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
     // different order in via table
     public function testFindEagerViaRelationPreserveOrderB()
     {
-        /* @var $orderClass \yii\db\ActiveRecordInterface */
+        /* @var $orderClass \yii\db\ActiveRecord */
         $orderClass = $this->getOrderClass();
 
         $orders = $orderClass::find()->with('itemsInOrder2')->orderBy('created_at')->all();
@@ -2024,10 +2024,10 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testLink()
     {
-        /* @var $orderClass \yii\db\ActiveRecordInterface */
-        /* @var $itemClass \yii\db\ActiveRecordInterface */
-        /* @var $orderItemClass \yii\db\ActiveRecordInterface */
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $orderClass \yii\db\ActiveRecord */
+        /* @var $itemClass \yii\db\ActiveRecord */
+        /* @var $orderItemClass \yii\db\ActiveRecord */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
         $orderClass = $this->getOrderClass();
         $orderItemClass = $this->getOrderItemClass();
@@ -2077,13 +2077,13 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testUnlink()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
-        /* @var $orderClass \yii\db\ActiveRecordInterface */
+        /* @var $orderClass \yii\db\ActiveRecord */
         $orderClass = $this->getOrderClass();
-        /* @var $orderWithNullFKClass \yii\db\ActiveRecordInterface */
+        /* @var $orderWithNullFKClass \yii\db\ActiveRecord */
         $orderWithNullFKClass = $this->getOrderWithNullFKClass();
-        /* @var $orderItemsWithNullFKClass \yii\db\ActiveRecordInterface */
+        /* @var $orderItemsWithNullFKClass \yii\db\ActiveRecord */
         $orderItemsWithNullFKClass = $this->getOrderItemWithNullFKmClass();
 
 
@@ -2130,17 +2130,17 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testUnlinkAll()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
-        /* @var $orderClass \yii\db\ActiveRecordInterface */
+        /* @var $orderClass \yii\db\ActiveRecord */
         $orderClass = $this->getOrderClass();
-        /* @var $orderItemClass \yii\db\ActiveRecordInterface */
+        /* @var $orderItemClass \yii\db\ActiveRecord */
         $orderItemClass = $this->getOrderItemClass();
-        /* @var $itemClass \yii\db\ActiveRecordInterface */
+        /* @var $itemClass \yii\db\ActiveRecord */
         $itemClass = $this->getItemClass();
-        /* @var $orderWithNullFKClass \yii\db\ActiveRecordInterface */
+        /* @var $orderWithNullFKClass \yii\db\ActiveRecord */
         $orderWithNullFKClass = $this->getOrderWithNullFKClass();
-        /* @var $orderItemsWithNullFKClass \yii\db\ActiveRecordInterface */
+        /* @var $orderItemsWithNullFKClass \yii\db\ActiveRecord */
         $orderItemsWithNullFKClass = $this->getOrderItemWithNullFKmClass();
 
         /* @var $this TestCase|ActiveRecordTestTrait */
@@ -2251,7 +2251,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testInsert()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
         /* @var $this TestCase|ActiveRecordTestTrait */
         $customer = new $customerClass;
@@ -2275,7 +2275,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testExplicitPkOnAutoIncrement()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
         /* @var $this TestCase|ActiveRecordTestTrait */
         $customer = new $customerClass;
@@ -2294,7 +2294,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testUpdate()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
         /* @var $this TestCase|ActiveRecordTestTrait */
         // save
@@ -2337,7 +2337,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testUpdateAttributes()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
         /* @var $this TestCase|ActiveRecordTestTrait */
         /* @var $customer Customer */
@@ -2372,7 +2372,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testUpdateCounters()
     {
-        /* @var $orderItemClass \yii\db\ActiveRecordInterface */
+        /* @var $orderItemClass \yii\db\ActiveRecord */
         $orderItemClass = $this->getOrderItemClass();
         /* @var $this TestCase|ActiveRecordTestTrait */
         // updateCounters
@@ -2403,7 +2403,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testDelete()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
         /* @var $this TestCase|ActiveRecordTestTrait */
         // delete
@@ -2435,7 +2435,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
      */
     public function testBooleanAttribute()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
         /* @var $this TestCase|ActiveRecordTestTrait */
         $customer = new $customerClass();
@@ -2462,7 +2462,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testAfterFind()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
         /* @var $orderClass BaseActiveRecord */
         $orderClass = $this->getOrderClass();
@@ -2519,7 +2519,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testAfterRefresh()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
         /* @var $this TestCase|ActiveRecordTestTrait */
 
@@ -2540,7 +2540,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testFindEmptyInCondition()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
         /* @var $this TestCase|ActiveRecordTestTrait */
 
@@ -2561,7 +2561,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
     {
         /* @var $this TestCase|ActiveRecordTestTrait */
 
-        /* @var $orderClass \yii\db\ActiveRecordInterface */
+        /* @var $orderClass \yii\db\ActiveRecord */
         $orderClass = $this->getOrderClass();
 
         /* @var $order Order */
@@ -2584,7 +2584,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
     public function testAttributeAccess()
     {
-        /* @var $customerClass \yii\db\ActiveRecordInterface */
+        /* @var $customerClass \yii\db\ActiveRecord */
         $customerClass = $this->getCustomerClass();
         $model = new $customerClass();
 
@@ -2628,7 +2628,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
 
         try {
 
-            /* @var $itemClass \yii\db\ActiveRecordInterface */
+            /* @var $itemClass \yii\db\ActiveRecord */
             $itemClass = $this->getItemClass();
             $customer->orderItems = [new $itemClass()];
             $this->fail('setter call above MUST throw Exception');

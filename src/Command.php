@@ -37,7 +37,7 @@ class Command {
             $sqlHandler = ArSql::getSqlHandler();
         }
         $this->sqlHandler = $sqlHandler;
-        $this->schema = ArSql::createSchema($this->sqlHandler);
+        $this->schema = ArSql::getSchema($this->sqlHandler);
         $this->builder = new Builder($this->schema);
 
         if ($sql) {

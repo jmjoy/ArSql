@@ -2,6 +2,8 @@
 
 namespace arSql;
 
+use arSql\contract\ISqlHandler;
+
 /**
  * Query represents a SELECT SQL statement in a way that is independent of DBMS.
  *

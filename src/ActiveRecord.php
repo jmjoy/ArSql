@@ -7,7 +7,9 @@
 
 namespace arSql;
 
+use arSql\contract\ISqlHandler;
 use arSql\exception\InvalidConfigException;
+use arSql\lib\ArrayHelper;
 
 /**
  * ActiveRecord is the base class for classes representing relational data in terms of objects.
@@ -206,7 +208,7 @@ class ActiveRecord extends BaseActiveRecord
      */
     public static function updateAll($attributes, $condition = '', $params = array())
     {
-        $command = static::getDb()->createCommand();
+        $command = ArSql::createCommand();
         $command->update(static::tableName(), $attributes, $condition, $params);
 
         return $command->execute();
@@ -287,7 +289,7 @@ class ActiveRecord extends BaseActiveRecord
      */
     public static function find()
     {
-        return Yii::createObject(ActiveQuery::className(), array(get_called_class()));
+        return new ActiveQuery(static::className());
     }
 
     /**
@@ -310,7 +312,7 @@ class ActiveRecord extends BaseActiveRecord
      */
     public static function getTableSchema()
     {
-        $tableSchema = ArSql::createSchema()
+        $tableSchema = ArSql::getSchema()
             ->getTableSchema(static::tableName());
 
         if ($tableSchema === null) {
@@ -434,13 +436,8 @@ class ActiveRecord extends BaseActiveRecord
      * @return bool whether the attributes are valid and the record is inserted successfully.
      * @throws \Exception in case insert failed.
      */
-    public function insert($runValidation = true, $attributes = null)
+    public function insert($attributes = null)
     {
-        if ($runValidation && !$this->validate($attributes)) {
-            Yii::info('Model not inserted due to validation error.', __METHOD__);
-            return false;
-        }
-
         if (!$this->isTransactional(self::OP_INSERT)) {
             return $this->insertInternal($attributes);
         }
@@ -475,11 +472,11 @@ class ActiveRecord extends BaseActiveRecord
             return false;
         }
         $values = $this->getDirtyAttributes($attributes);
-        if (($primaryKeys = static::getDb()->schema->insert(static::tableName(), $values)) === false) {
+        if (($primaryKeys = ArSql::getSchema()->insert(static::tableName(), $values)) === false) {
             return false;
         }
         foreach ($primaryKeys as $name => $value) {
-            $id = static::getTableSchema()->columnsarray($name)->phpTypecast($value);
+            $id = static::getTableSchema()->columns[$name]->phpTypecast($value);
             $this->setAttribute($name, $id);
             $values[$name] = $id;
         }
@@ -543,13 +540,8 @@ class ActiveRecord extends BaseActiveRecord
      * being updated is outdated.
      * @throws \Exception in case update failed.
      */
-    public function update($runValidation = true, $attributeNames = null)
+    public function update($attributeNames = null)
     {
-        if ($runValidation && !$this->validate($attributeNames)) {
-            Yii::info('Model not updated due to validation error.', __METHOD__);
-            return false;
-        }
-
         if (!$this->isTransactional(self::OP_UPDATE)) {
             return $this->updateInternal($attributeNames);
         }

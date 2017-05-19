@@ -61,6 +61,11 @@ abstract class Schema
      */
     private $_builder;
 
+    protected $sqlHandler;
+
+    public function __construct($sqlHandler) {
+        $this->sqlHandler = $sqlHandler;
+    }
 
     /**
      * @return \yii\db\ColumnSchema
@@ -280,11 +285,11 @@ abstract class Schema
      */
     public function getLastInsertID($sequenceName = '')
     {
-        if ($this->db->isActive) {
-            return $this->db->pdo->lastInsertId($sequenceName === '' ? null : $this->quoteTableName($sequenceName));
-        } else {
+        $insertID = $this->sqlHandler->getLastInsertID($sequenceName === '' ? null : $this->quoteTableName($sequenceName));
+        if (!$insertID) {
             throw new InvalidCallException('DB Connection is not active.');
         }
+        return $insertID;
     }
 
     /**
@@ -344,7 +349,8 @@ abstract class Schema
      */
     public function insert($table, $columns)
     {
-        $command = $this->db->createCommand()->insert($table, $columns);
+        $command = new Command($this->sqlHandler);
+        $command = $command->insert($table, $columns);
         if (!$command->execute()) {
             return false;
         }

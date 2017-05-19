@@ -24,6 +24,6 @@ interface ISqlHandler {
     /**
      * 返回最后插入行的ID或序列值
      */
-    public function getLastInsertID();
+    public function getLastInsertID($name = '');
 
 }

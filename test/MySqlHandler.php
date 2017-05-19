@@ -49,13 +49,13 @@ class MySqlHandler implements ISqlHandler {
         return $exec;
     }
 
-    public function getLastInsertID() {
+    public function getLastInsertID($name = '') {
         return $this->pdo->lastInsertId();
     }
 
     protected function checkFail($query, $sql) {
+        dump($sql);
         if ($query === false) {
-            dump($sql);
             dump($this->pdo->errorInfo());
         }
     }

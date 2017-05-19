@@ -7,6 +7,9 @@
 
 namespace arSql;
 
+use arSql\contract\ISqlHandler;
+use arSql\exception\InvalidParamException;
+
 /**
  * ActiveQuery represents a DB query associated with an Active Record class.
  *
@@ -175,9 +178,9 @@ class ActiveQuery extends Query
      * If null, the DB connection returned by [[modelClass]] will be used.
      * @return array|ActiveRecord[] the query results. If the query results in nothing, an empty array will be returned.
      */
-    public function all($db = null)
+    public function all(ISqlHandler $sqlHandler = null)
     {
-        return parent::all($db);
+        return parent::all($sqlHandler);
     }
 
     /**
@@ -646,16 +649,17 @@ class ActiveQuery extends Query
 
         if (!empty($child->link)) {
 
-            if (strpos($parentAlias, '{{') === false) {
-                $parentAlias = '{{' . $parentAlias . '}}';
-            }
-            if (strpos($childAlias, '{{') === false) {
-                $childAlias = '{{' . $childAlias . '}}';
-            }
+            // if (strpos($parentAlias, '{{') === false) {
+            //     $parentAlias = '{{' . $parentAlias . '}}';
+            // }
+            // if (strpos($childAlias, '{{') === false) {
+            //     $childAlias = '{{' . $childAlias . '}}';
+            // }
 
             $on = array();
             foreach ($child->link as $childColumn => $parentColumn) {
-                $on[] = "$parentAlias.[[$parentColumn]] = $childAlias.[[$childColumn]]";
+                // $on[] = "$parentAlias.[[$parentColumn]] = $childAlias.[[$childColumn]]";
+                $on[] = "$parentAlias.$parentColumn = $childAlias.$childColumn";
             }
             $on = implode(' AND ', $on);
             if (!empty($child->on)) {
@@ -787,7 +791,7 @@ class ActiveQuery extends Query
      * @return $this the query object itself
      * @see via()
      */
-    public function viaTable($tableName, $link, callable $callable = null)
+    public function viaTable($tableName, $link, $callable = null)
     {
         $relation = new ActiveQuery(get_class($this->primaryModel), array(
             'from' => array($tableName),
@@ -1049,7 +1053,7 @@ PATTERN;
     public function findWith($with, &$models)
     {
         $primaryModel = reset($models);
-        if (!$primaryModel instanceof ActiveRecordInterface) {
+        if (!$primaryModel instanceof ActiveRecord) {
             $primaryModel = new $this->modelClass;
         }
         $relations = $this->normalizeRelations($primaryModel, $with);
@@ -1139,7 +1143,7 @@ PATTERN;
      * Its signature should be `function($query)`, where `$query` is the query to be customized.
      * @return $this the relation object itself.
      */
-    public function via($relationName, callable $callable = null)
+    public function via($relationName, $callable = null)
     {
         $relation = $this->primaryModel->getRelation($relationName);
         $this->via = array($relationName, $relation);
@@ -1179,7 +1183,7 @@ PATTERN;
      * Finds the related records for the specified primary record.
      * This method is invoked when a relation of an ActiveRecord is being accessed in a lazy fashion.
      * @param string $name the relation name
-     * @param ActiveRecordInterface|BaseActiveRecord $model the primary model
+     * @param ActiveRecord|BaseActiveRecord $model the primary model
      * @return mixed the related record(s)
      * @throws InvalidParamException if the relation is invalid
      */
@@ -1208,7 +1212,7 @@ PATTERN;
         }
 
         foreach ($result as $i => $relatedModel) {
-            if ($relatedModel instanceof ActiveRecordInterface) {
+            if ($relatedModel instanceof ActiveRecord) {
                 if (!isset($inverseRelation)) {
                     $inverseRelation = $relatedModel->getRelation($this->inverseOf);
                 }
@@ -1260,7 +1264,7 @@ PATTERN;
         if (!$this->multiple && count($primaryModels) === 1) {
             $model = $this->one();
             foreach ($primaryModels as $i => $primaryModel) {
-                if ($primaryModel instanceof ActiveRecordInterface) {
+                if ($primaryModel instanceof ActiveRecord) {
                     $primaryModel->populateRelation($name, $model);
                 } else {
                     $primaryModels[$i][$name] = $model;
@@ -1310,7 +1314,7 @@ PATTERN;
                     $key = $this->getModelKey($primaryModel, $link);
                     $value = isset($buckets[$key]) ? $buckets[$key] : ($this->multiple ? array() : null);
                 }
-                if ($primaryModel instanceof ActiveRecordInterface) {
+                if ($primaryModel instanceof ActiveRecord) {
                     $primaryModel->populateRelation($name, $value);
                 } else {
                     $primaryModels[$i][$name] = $value;
@@ -1325,8 +1329,8 @@ PATTERN;
     }
 
     /**
-     * @param ActiveRecordInterface[] $primaryModels primary models
-     * @param ActiveRecordInterface[] $models models
+     * @param ActiveRecord[] $primaryModels primary models
+     * @param ActiveRecord[] $models models
      * @param string $primaryName the primary relation name
      * @param string $name the relation name
      */
@@ -1338,11 +1342,11 @@ PATTERN;
         $model = reset($models);
         $refModel = (new $this->modelClass);
         /* @var $relation ActiveQueryInterface|ActiveQuery */
-        $relation = $model instanceof ActiveRecordInterface ? $model->getRelation($name) : $refModel->getRelation($name);
+        $relation = $model instanceof ActiveRecord ? $model->getRelation($name) : $refModel->getRelation($name);
 
         if ($relation->multiple) {
             $buckets = $this->buildBuckets($primaryModels, $relation->link, null, null, false);
-            if ($model instanceof ActiveRecordInterface) {
+            if ($model instanceof ActiveRecord) {
                 foreach ($models as $model) {
                     $key = $this->getModelKey($model, $relation->link);
                     $model->populateRelation($name, isset($buckets[$key]) ? $buckets[$key] : array());
@@ -1364,7 +1368,7 @@ PATTERN;
             if ($this->multiple) {
                 foreach ($primaryModels as $i => $primaryModel) {
                     foreach ($primaryModel[$primaryName] as $j => $m) {
-                        if ($m instanceof ActiveRecordInterface) {
+                        if ($m instanceof ActiveRecord) {
                             $m->populateRelation($name, $primaryModel);
                         } else {
                             $primaryModels[$i][$primaryName][$j][$name] = $primaryModel;
@@ -1373,7 +1377,7 @@ PATTERN;
                 }
             } else {
                 foreach ($primaryModels as $i => $primaryModel) {
-                    if ($primaryModels[$i][$primaryName] instanceof ActiveRecordInterface) {
+                    if ($primaryModels[$i][$primaryName] instanceof ActiveRecord) {
                         $primaryModels[$i][$primaryName]->populateRelation($name, $primaryModel);
                     } elseif (!empty($primaryModels[$i][$primaryName])) {
                         $primaryModels[$i][$primaryName][$name] = $primaryModel;
@@ -1530,7 +1534,7 @@ PATTERN;
     }
 
     /**
-     * @param ActiveRecordInterface|array $model
+     * @param ActiveRecord|array $model
      * @param array $attributes
      * @return string
      */
@@ -1572,12 +1576,12 @@ PATTERN;
         $this->filterByModels($primaryModels);
         /* @var $primaryModel ActiveRecord */
         $primaryModel = reset($primaryModels);
-        if (!$primaryModel instanceof ActiveRecordInterface) {
+        if (!$primaryModel instanceof ActiveRecord) {
             // when primaryModels are array of arrays (asArray case)
             $primaryModel = $this->modelClass;
         }
 
-        return $this->asArray()->all($primaryModel::getDb());
+        return $this->asArray()->all(ArSql::getSqlHandler());
     }
 
 
