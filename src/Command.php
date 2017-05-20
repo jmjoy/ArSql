@@ -38,7 +38,7 @@ class Command {
         }
         $this->sqlHandler = $sqlHandler;
         $this->schema = ArSql::getSchema($this->sqlHandler);
-        $this->builder = new Builder($this->schema);
+        $this->builder = $this->schema->createBuilder();
 
         if ($sql) {
             $this->setSql($sql)->bindValues($params);

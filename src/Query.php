@@ -33,7 +33,7 @@ use arSql\contract\ISqlHandler;
  *
  * A more detailed usage guide on how to work with Query can be found in the [guide article on Query Builder](guide:db-query-builder).
  */
-class Query {
+class Query extends Object {
 
     /**
      * @var array the columns being selected. For example, `['id', 'name']`.
@@ -136,12 +136,6 @@ class Query {
      */
     public $emulateExecution = false;
 
-
-    public function __construct($config = array()) {
-        foreach ($config as $name => $value) {
-            $this->$name = $value;
-        }
-    }
 
     /**
      * A new method for PHP5.3

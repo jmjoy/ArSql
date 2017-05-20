@@ -17,12 +17,15 @@ abstract class TestCase extends PHPUnit_Framework_TestCase {
 
     protected static $sqlHandler;
 
+    protected static $mysqlConfig;
+
     public static function setUpBeforeClass() {
         if (!static::$initialized) {
             static::$initialized = true;
 
             $config = require __DIR__ . '/data/config.php';
             $mysqlConfig = $config['database']['mysql'];
+            static::$mysqlConfig = $mysqlConfig;
             static::$pdo = new PDO($mysqlConfig['dsn'], $mysqlConfig['username'], $mysqlConfig['password']);
 
             static::$sqlHandler = new MySqlHandler(static::$pdo);
@@ -36,6 +39,10 @@ abstract class TestCase extends PHPUnit_Framework_TestCase {
     public static function tearDownAfterClass() {
     }
 
+    // public function setUp() {
+    //     static::prepareDatabase(static::$mysqlConfig['fixture']);
+    // }
+
     /**
      * adjust dbms specific escaping
      * @param $sql
@@ -45,7 +52,10 @@ abstract class TestCase extends PHPUnit_Framework_TestCase {
         return str_replace(array('[[', ']]'), '`', $sql);
     }
 
-    private static function prepareDatabase($fixture) {
+    protected static function prepareDatabase($fixture = null) {
+        if (!$fixture) {
+            $fixture = static::$mysqlConfig['fixture'];
+        }
         $lines = explode(';', file_get_contents($fixture));
         foreach ($lines as $line) {
             $line = trim($line);

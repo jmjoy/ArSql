@@ -44,12 +44,40 @@ class ArSql {
         return static::$schemas[$schemaType];
     }
 
+    public static function getBuilder(ISqlHandler $sqlHandler = null) {
+        if (!$sqlHandler) {
+            $sqlHandler = static::getSqlHandler();
+        }
+        $schemaType = $sqlHandler->schemaType();
+        $className = "\\arSql\\{$schemaType}\\Builder";
+        if (!class_exists($className)) {
+            throw new NotSupportedException("Not supported schema type: {$schemaType}");
+        }
+        return new $schemaClass($sqlHandler);
+    }
+
     public static function getTablePrefix() {
         return static::$tablePrefix;
     }
 
     public static function setTablePrefix($tablePrefix) {
         static::$tablePrefix = $tablePrefix;
+    }
+
+    public static function insert($table, $columns) {
+        return static::createCommand()->insert($table, $columns);
+    }
+
+    public static function batchInsert($table, $columns, $rows) {
+        return static::createCommand()->batchInsert($table, $columns, $rows);
+    }
+
+    public static function update($table, $columns, $condition = '', $params = array()) {
+        return static::createCommand()->update($table, $columns, $condition, $params);
+    }
+
+    public static function delete($table, $condition = '', $params = array()) {
+        return static::createCommand()->delete($table, $condition, $params);
     }
 
 }

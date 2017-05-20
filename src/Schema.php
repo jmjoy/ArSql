@@ -208,9 +208,9 @@ abstract class Schema
      * This method may be overridden by child classes to create a DBMS-specific query builder.
      * @return QueryBuilder query builder instance
      */
-    public function createQueryBuilder()
+    public function createBuilder()
     {
-        return new QueryBuilder($this->db);
+        return new Builder($this);
     }
 
     /**

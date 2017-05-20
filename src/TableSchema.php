@@ -17,7 +17,7 @@ use arSql\exception\InvalidParamException;
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
  */
-class TableSchema
+class TableSchema extends Object
 {
     /**
      * @var string the name of the schema that this table belongs to.

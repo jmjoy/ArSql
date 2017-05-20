@@ -7,8 +7,10 @@
 
 namespace arSql;
 
+use ArrayObject;
 use arSql\contract\ISqlHandler;
 use arSql\exception\InvalidParamException;
+use arSql\exception\InvalidConfigException;
 
 /**
  * ActiveQuery represents a DB query associated with an Active Record class.

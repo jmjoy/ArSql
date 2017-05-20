@@ -1,26 +1,18 @@
 <?php
 
-namespace test\framework\db;
+namespace test;
 
-use yii\base\Event;
-use yii\db\ActiveQuery;
-use yii\db\Connection;
-use yii\db\QueryBuilder;
 use test\data\ar\ActiveRecord;
 use test\data\ar\Customer;
 use test\data\ar\Profile;
+use arSql\ActiveQuery;
+use arSql\ArSql;
 
 /**
  * Class ActiveQueryTest the base class for testing ActiveQuery
  */
-abstract class ActiveQueryTest extends DatabaseTestCase
+class ActiveQueryTest extends TestCase
 {
-    public function setUp()
-    {
-        parent::setUp();
-        ActiveRecord::$db = $this->getConnection();
-    }
-
     public function testConstructor()
     {
         $config = array(
@@ -33,17 +25,17 @@ abstract class ActiveQueryTest extends DatabaseTestCase
         $this->assertEquals($query->joinWith, $config['joinWith']);
     }
 
-    public function testTriggerInitEvent()
-    {
-        $where = '1==1';
-        $callback = function (\yii\base\Event $event) use ($where) {
-            $event->sender->where = $where;
-        };
-        Event::on(ActiveQuery::className(), ActiveQuery::EVENT_INIT, $callback);
-        $result = new ActiveQuery(Customer::className());
-        $this->assertEquals($where, $result->where);
-        Event::off(ActiveQuery::className(), ActiveQuery::EVENT_INIT, $callback);
-    }
+    // public function testTriggerInitEvent()
+    // {
+    //     $where = '1==1';
+    //     $callback = function (\yii\base\Event $event) use ($where) {
+    //         $event->sender->where = $where;
+    //     };
+    //     Event::on(ActiveQuery::className(), ActiveQuery::EVENT_INIT, $callback);
+    //     $result = new ActiveQuery(Customer::className());
+    //     $this->assertEquals($where, $result->where);
+    //     Event::off(ActiveQuery::className(), ActiveQuery::EVENT_INIT, $callback);
+    // }
 
     /**
      * @todo: tests for internal logic of prepare()
@@ -51,9 +43,9 @@ abstract class ActiveQueryTest extends DatabaseTestCase
     public function testPrepare()
     {
         $query = new ActiveQuery(Customer::className());
-        $builder = new QueryBuilder(new Connection());
+        $builder = ArSql::getSchema()->createBuilder();
         $result = $query->prepare($builder);
-        $this->assertInstanceOf('yii\db\Query', $result);
+        $this->assertInstanceOf('arSql\\Query', $result);
     }
 
     public function testPopulate_EmptyRows()
@@ -92,18 +84,18 @@ abstract class ActiveQueryTest extends DatabaseTestCase
     {
         $query = new ActiveQuery(Customer::className());
         $result = $query->createCommand();
-        $this->assertInstanceOf('yii\db\Command', $result);
+        $this->assertInstanceOf('arSql\\Command', $result);
     }
 
-    /**
-     * @todo: tests for internal logic of queryScalar()
-     */
-    public function testQueryScalar()
-    {
-        $query = new ActiveQuery(Customer::className());
-        $result = $this->invokeMethod($query, 'queryScalar', array('name', null));
-        $this->assertEquals('user1', $result);
-    }
+    // /**
+    //  * @todo: tests for internal logic of queryScalar()
+    //  */
+    // public function testQueryScalar()
+    // {
+    //     $query = new ActiveQuery(Customer::className());
+    //     $result = $query->queryScalar('name', null);
+    //     $this->assertEquals('user1', $result);
+    // }
 
     /**
      * @todo: tests for internal logic of joinWith()
@@ -129,23 +121,23 @@ abstract class ActiveQueryTest extends DatabaseTestCase
         ), $result->joinWith);
     }
 
-    /**
-     * @todo: tests for the regex inside getQueryTableName
-     */
-    public function testGetQueryTableName_from_not_set()
-    {
-        $query = new ActiveQuery(Customer::className());
-        $result = $this->invokeMethod($query,'getTableNameAndAlias');
-        $this->assertEquals(array('customer','customer'), $result);
-    }
+    // /**
+    //  * @todo: tests for the regex inside getQueryTableName
+    //  */
+    // public function testGetQueryTableName_from_not_set()
+    // {
+    //     $query = new ActiveQuery(Customer::className());
+    //     $result = $this->invokeMethod($query,'getTableNameAndAlias');
+    //     $this->assertEquals(array('customer','customer'), $result);
+    // }
 
-    public function testGetQueryTableName_from_set()
-    {
-        $options = array('from' => array('alias'=>'customer'));
-        $query = new ActiveQuery(Customer::className(), $options);
-        $result = $this->invokeMethod($query,'getTableNameAndAlias');
-        $this->assertEquals(array('customer','alias'), $result);
-    }
+    // public function testGetQueryTableName_from_set()
+    // {
+    //     $options = array('from' => array('alias'=>'customer'));
+    //     $query = new ActiveQuery(Customer::className(), $options);
+    //     $result = $this->invokeMethod($query,'getTableNameAndAlias');
+    //     $this->assertEquals(array('customer','alias'), $result);
+    // }
 
     public function testOnCondition()
     {
@@ -210,15 +202,15 @@ abstract class ActiveQueryTest extends DatabaseTestCase
     {
         $query = new ActiveQuery(Customer::className());
         $result = $query->viaTable(Profile::className(), array('id' => 'item_id'));
-        $this->assertInstanceOf('yii\db\ActiveQuery', $result);
-        $this->assertInstanceOf('yii\db\ActiveQuery', $result->via);
+        $this->assertInstanceOf('arSql\\ActiveQuery', $result);
+        $this->assertInstanceOf('arSql\\ActiveQuery', $result->via);
     }
 
     public function testAlias_not_set()
     {
         $query = new ActiveQuery(Customer::className());
         $result = $query->alias('alias');
-        $this->assertInstanceOf('yii\db\ActiveQuery', $result);
+        $this->assertInstanceOf('arSql\\ActiveQuery', $result);
         $this->assertEquals(array('alias' => 'customer'), $result->from);
     }
 
@@ -228,7 +220,7 @@ abstract class ActiveQueryTest extends DatabaseTestCase
         $query = new ActiveQuery(Customer::className());
         $query->from = $aliasOld;
         $result = $query->alias('alias');
-        $this->assertInstanceOf('yii\db\ActiveQuery', $result);
+        $this->assertInstanceOf('arSql\\ActiveQuery', $result);
         $this->assertEquals(array('alias' => 'old'), $result->from);
     }
 
@@ -282,7 +274,7 @@ abstract class ActiveQueryTest extends DatabaseTestCase
         $query = new ActiveQuery(null);
         $query->from = new \stdClass;
 
-        $this->setExpectedException('\yii\base\InvalidConfigException');
+        $this->setExpectedException('\arSql\exception\InvalidConfigException');
 
         $query->getTablesUsedInFrom();
     }
@@ -338,7 +330,7 @@ abstract class ActiveQueryTest extends DatabaseTestCase
         $query = new ActiveQuery(null);
         $query->from = new \stdClass;
 
-        $this->setExpectedException('\yii\base\InvalidConfigException');
+        $this->setExpectedException('\arSql\exception\InvalidConfigException');
 
         $query->getTablesUsedInFrom();
     }

@@ -2177,7 +2177,7 @@ abstract class ActiveRecordTest extends DatabaseTestCase
         $order->unlinkAll('books', true);
         $this->afterSave();
         $this->assertEquals(5, $itemClass::find()->count());
-        $this->assertEquals($orderItemCount - 2, $orderItemClass::find()->count());
+        $this->assertEquals($orderItemCount - 3, $orderItemClass::find()->count());
         $this->assertCount(0, $order->books);
 
         // via model without delete

@@ -9,6 +9,7 @@ namespace arSql;
 
 use arSql\exception\InvalidParamException;
 use arSql\exception\StaleObjectException;
+use arSql\exception\InvalidCallException;
 
 /**
  * ActiveRecord is the base class for classes representing relational data in terms of objects.
@@ -870,19 +871,6 @@ abstract class BaseActiveRecord extends Model
     }
 
     /**
-     * Initializes the object.
-     * This method is called at the end of the constructor.
-     * The default implementation will trigger an [[EVENT_INIT]] event.
-     * If you override this method, make sure you call the parent implementation at the end
-     * to ensure triggering of the event.
-     */
-    public function init()
-    {
-        parent::init();
-        $this->trigger(self::EVENT_INIT);
-    }
-
-    /**
      * This method is called when the AR object is created and populated with the query result.
      * The default implementation will trigger an [[EVENT_AFTER_FIND]] event.
      * When overriding this method, make sure you call the parent implementation to ensure the
@@ -1248,7 +1236,7 @@ abstract class BaseActiveRecord extends Model
                 foreach ($columns as $column => $value) {
                     $record->$column = $value;
                 }
-                $record->insert(false);
+                $record->insert();
             } else {
                 /* @var $viaTable string */
                 ArSql::createCommand()
@@ -1358,7 +1346,7 @@ abstract class BaseActiveRecord extends Model
                     foreach ($relation->link as $a => $b) {
                         $model->$a = null;
                     }
-                    $model->save(false);
+                    $model->save();
                 }
             } elseif ($p1) {
                 foreach ($relation->link as $a => $b) {
@@ -1372,7 +1360,7 @@ abstract class BaseActiveRecord extends Model
                         $this->$b = null;
                     }
                 }
-                $delete ? $this->delete() : $this->save(false);
+                $delete ? $this->delete() : $this->save();
             } else {
                 throw new InvalidCallException('Unable to unlink models: the link does not involve any primary key.');
             }
@@ -1450,7 +1438,7 @@ abstract class BaseActiveRecord extends Model
             if (!$delete && count($relation->link) === 1 && is_array($this->{$b = reset($relation->link)})) {
                 // relation via array valued attribute
                 $this->$b = array();
-                $this->save(false);
+                $this->save();
             } else {
                 $nulls = array();
                 $condition = array();
@@ -1494,7 +1482,7 @@ abstract class BaseActiveRecord extends Model
                 $foreignModel->$fk = $value;
             }
         }
-        $foreignModel->save(false);
+        $foreignModel->save();
     }
 
     /**
