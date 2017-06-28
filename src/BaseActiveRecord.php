@@ -683,11 +683,11 @@ abstract class BaseActiveRecord extends Model
      * being updated is outdated.
      * @throws Exception in case update failed.
      */
-    public function update($runValidation = true, $attributeNames = null)
+    public function update($attributeNames = null)
     {
-        if ($runValidation && !$this->validate($attributeNames)) {
-            return false;
-        }
+        // if ($runValidation && !$this->validate($attributeNames)) {
+        //     return false;
+        // }
         return $this->updateInternal($attributeNames);
     }
 

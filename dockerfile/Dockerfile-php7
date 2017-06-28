@@ -1,8 +1,8 @@
-FROM webdevops/php-nginx:ubuntu-12.04
+FROM webdevops/php-nginx:ubuntu-16.04
 
 WORKDIR /
 
-RUN apt-get update && apt-get upgrade
+RUN apt-get update -y && apt-get upgrade -y
 
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
     php composer-setup.php && \

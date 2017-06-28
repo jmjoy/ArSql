@@ -2,7 +2,20 @@ version: '2'
 
 services:
   php:
-    build: .
+    build:
+      context: ./dockerfile
+      dockerfile: Dockerfile-php5
+
+    volumes:
+      - .:/arSql
+    links:
+      - mysql
+
+  php7:
+    build:
+      context: ./dockerfile
+      dockerfile: Dockerfile-php7
+
     volumes:
       - .:/arSql
     links:
