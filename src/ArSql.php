@@ -25,8 +25,8 @@ class ArSql {
         return static::$sqlHandler;
     }
 
-    public static function createCommand($sql = '', $params = array()) {
-        return new Command(static::getSqlHandler(), $sql, $params);
+    public static function createCommand($sql = '', $params = array(), ISqlHandler $sqlHandler = null) {
+        return new Command($sqlHandler ?: static::getSqlHandler(), $sql, $params);
     }
 
     public static function getSchema(ISqlHandler $sqlHandler = null) {
@@ -64,20 +64,20 @@ class ArSql {
         static::$tablePrefix = $tablePrefix;
     }
 
-    public static function insert($table, $columns) {
-        return static::createCommand()->insert($table, $columns);
+    public static function insert($table, $columns, ISqlHandler $sqlHandler = null) {
+        return static::createCommand('', array(), $sqlHandler)->insert($table, $columns);
     }
 
-    public static function batchInsert($table, $columns, $rows) {
-        return static::createCommand()->batchInsert($table, $columns, $rows);
+    public static function batchInsert($table, $columns, $rows, ISqlHandler $sqlHandler = null) {
+        return static::createCommand('', array(), $sqlHandler)->batchInsert($table, $columns, $rows);
     }
 
-    public static function update($table, $columns, $condition = '', $params = array()) {
-        return static::createCommand()->update($table, $columns, $condition, $params);
+    public static function update($table, $columns, $condition = '', $params = array(), ISqlHandler $sqlHandler = null) {
+        return static::createCommand('', array(), $sqlHandler)->update($table, $columns, $condition, $params);
     }
 
-    public static function delete($table, $condition = '', $params = array()) {
-        return static::createCommand()->delete($table, $condition, $params);
+    public static function delete($table, $condition = '', $params = array(), ISqlHandler $sqlHandler = null) {
+        return static::createCommand('', array(), $sqlHandler)->delete($table, $condition, $params);
     }
 
 }

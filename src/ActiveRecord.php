@@ -441,9 +441,7 @@ class ActiveRecord extends BaseActiveRecord
      */
     public function insert($attributes = null)
     {
-        if (!$this->isTransactional(self::OP_INSERT)) {
-            return $this->insertInternal($attributes);
-        }
+        return $this->insertInternal($attributes);
     }
 
     /**
