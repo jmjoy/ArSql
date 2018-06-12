@@ -26,5 +26,5 @@ services:
     environment:
       - MYSQL_DATABASE=test
       - MYSQL_ROOT_PASSWORD=root
-    ports:
-      - 3306:3306
+    # ports:
+    #   - 3306:3306

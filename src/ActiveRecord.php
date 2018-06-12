@@ -210,7 +210,7 @@ class ActiveRecord extends BaseActiveRecord
      */
     public static function updateAll($attributes, $condition = '', $params = array())
     {
-        $command = ArSql::createCommand();
+        $command = ArSql::createCommand(static::getSqlHandler());
         $command->update(static::tableName(), $attributes, $condition, $params);
 
         return $command->execute();
@@ -242,7 +242,7 @@ class ActiveRecord extends BaseActiveRecord
             $counters[$name] = new Expression("$name+:bp{$n}", array(":bp{$n}" => $value));
             $n++;
         }
-        $command = ArSql::createCommand();
+        $command = ArSql::createCommand(static::getSqlHandler());
         $command->update(static::tableName(), $counters, $condition, $params);
 
         return $command->execute();
@@ -279,7 +279,7 @@ class ActiveRecord extends BaseActiveRecord
      */
     public static function deleteAll($condition = null, $params = array())
     {
-        $command = ArSql::createCommand();
+        $command = ArSql::createCommand(static::getSqlHandler());
         $command->delete(static::tableName(), $condition, $params);
 
         return $command->execute();
@@ -291,7 +291,7 @@ class ActiveRecord extends BaseActiveRecord
      */
     public static function find()
     {
-        return new ActiveQuery(static::className());
+        return new ActiveQuery(static::className(), array('sqlHandler' => static::getSqlHandler()));
     }
 
     /**
@@ -443,23 +443,6 @@ class ActiveRecord extends BaseActiveRecord
     {
         if (!$this->isTransactional(self::OP_INSERT)) {
             return $this->insertInternal($attributes);
-        }
-
-        $transaction = ArSql::beginTransaction();
-        try {
-            $result = $this->insertInternal($attributes);
-            if ($result === false) {
-                $transaction->rollBack();
-            } else {
-                $transaction->commit();
-            }
-            return $result;
-        } catch (\Exception $e) {
-            $transaction->rollBack();
-            throw $e;
-        } catch (\Throwable $e) {
-            $transaction->rollBack();
-            throw $e;
         }
     }
 

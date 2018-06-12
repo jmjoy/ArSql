@@ -53,7 +53,7 @@ class ArSql {
         if (!class_exists($className)) {
             throw new NotSupportedException("Not supported schema type: {$schemaType}");
         }
-        return new $schemaClass($sqlHandler);
+        return new $className($sqlHandler);
     }
 
     public static function getTablePrefix() {

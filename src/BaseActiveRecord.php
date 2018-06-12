@@ -91,6 +91,13 @@ abstract class BaseActiveRecord extends Model
      */
     private $_related = array();
 
+    /**
+     * Get sqlHandler.
+     * @return ISqlHandler|null
+     */
+    public static function getSqlHandler() {
+        return null;
+    }
 
     /**
      * @inheritdoc

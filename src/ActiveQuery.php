@@ -361,14 +361,14 @@ class ActiveQuery extends Query
         /* @var $modelClass ActiveRecord */
         $modelClass = $this->modelClass;
         if ($this->sql === null) {
-            $command = new Command($sqlHandler);
+            $command = new Command($sqlHandler ?: $this->sqlHandler);
             list ($sql, $params) = $command->getBuilder()->build($this);
         } else {
             $sql = $this->sql;
             $params = $this->params;
         }
 
-        return new Command($sqlHandler, $sql, $params);
+        return new Command($sqlHandler ?: $this->sqlHandler, $sql, $params);
     }
 
     /**

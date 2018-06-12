@@ -136,6 +136,18 @@ class Query extends Object {
      */
     public $emulateExecution = false;
 
+    /**
+     * @var ISqlHandler
+     */
+    protected $sqlHandler;
+
+    /**
+     * SqlHandler setter
+     * @param ISqlHandler $sqlHandler
+     */
+    public function setSqlHandler(ISqlHandler $sqlHandler) {
+        $this->sqlHandler = $sqlHandler;
+    }
 
     /**
      * A new method for PHP5.3
@@ -149,7 +161,7 @@ class Query extends Object {
      * Creates a DB command that can be used to execute this query.
      */
     public function createCommand(ISqlHandler $sqlHandler = null) {
-        $command = new Command($sqlHandler);
+        $command = new Command($sqlHandler ?: $this->sqlHandler);
         list($sql, $params) = $command->getBuilder()->build($this);
         return $command->setSql($sql)->bindValues($params);
     }
