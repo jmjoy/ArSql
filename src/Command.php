@@ -93,6 +93,9 @@ class Command {
             if (is_string($name) && strncmp(':', $name, 1)) {
                 $name = ':' . $name;
             }
+            if (is_int($value) {
+                $value = (string) $value;
+            }
             if (is_string($value)) {
                 $params[$name] = $this->schema->quoteValue($value);
             } elseif (is_bool($value)) {
